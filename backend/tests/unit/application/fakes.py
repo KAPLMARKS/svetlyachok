@@ -8,6 +8,8 @@ from __future__ import annotations
 from dataclasses import replace
 from datetime import datetime
 
+from app.domain.attendance.entities import AttendanceLog
+from app.domain.attendance.value_objects import AttendanceStatus
 from app.domain.employees.entities import Employee, Role
 from app.domain.radiomap.entities import Fingerprint
 from app.domain.shared.exceptions import ConflictError, NotFoundError
@@ -288,4 +290,112 @@ class FakeFingerprintRepository:
             items = [fp for fp in items if fp.captured_at >= captured_from]
         if captured_to is not None:
             items = [fp for fp in items if fp.captured_at <= captured_to]
+        return items
+
+
+class FakeAttendanceRepository:
+    """In-memory AttendanceRepository.
+
+    Симулирует add/update с auto-increment id, get_open_session_for_employee
+    через линейный поиск (на тестовых объёмах ок), и list/count со всеми
+    фильтрами Protocol'а.
+    """
+
+    def __init__(self) -> None:
+        self._storage: dict[int, AttendanceLog] = {}
+        self._next_id = 1
+
+    async def add(self, log: AttendanceLog) -> AttendanceLog:
+        new_id = self._next_id
+        self._next_id += 1
+        stored = replace(log, id=new_id)
+        self._storage[new_id] = stored
+        return stored
+
+    async def update(self, log: AttendanceLog) -> AttendanceLog:
+        if log.id not in self._storage:
+            raise NotFoundError(
+                code="attendance_log_not_found",
+                message=f"id={log.id}",
+            )
+        self._storage[log.id] = log
+        return log
+
+    async def get_by_id(self, log_id: int) -> AttendanceLog | None:
+        return self._storage.get(log_id)
+
+    async def get_open_session_for_employee(
+        self, employee_id: int
+    ) -> AttendanceLog | None:
+        candidates = [
+            entry
+            for entry in self._storage.values()
+            if entry.employee_id == employee_id and entry.ended_at is None
+        ]
+        if not candidates:
+            return None
+        # Самая свежая по started_at.
+        return max(candidates, key=lambda e: e.started_at)
+
+    async def list(
+        self,
+        *,
+        employee_id: int | None = None,
+        zone_id: int | None = None,
+        status: AttendanceStatus | None = None,
+        started_from: datetime | None = None,
+        started_to: datetime | None = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> list[AttendanceLog]:
+        items = self._apply_filters(
+            list(self._storage.values()),
+            employee_id=employee_id,
+            zone_id=zone_id,
+            status=status,
+            started_from=started_from,
+            started_to=started_to,
+        )
+        items.sort(key=lambda e: e.started_at, reverse=True)
+        return items[offset : offset + limit]
+
+    async def count(
+        self,
+        *,
+        employee_id: int | None = None,
+        zone_id: int | None = None,
+        status: AttendanceStatus | None = None,
+        started_from: datetime | None = None,
+        started_to: datetime | None = None,
+    ) -> int:
+        items = self._apply_filters(
+            list(self._storage.values()),
+            employee_id=employee_id,
+            zone_id=zone_id,
+            status=status,
+            started_from=started_from,
+            started_to=started_to,
+        )
+        return len(items)
+
+    @staticmethod
+    def _apply_filters(
+        items: list[AttendanceLog],
+        *,
+        employee_id: int | None,
+        zone_id: int | None,
+        status: AttendanceStatus | None,
+        started_from: datetime | None,
+        started_to: datetime | None,
+    ) -> list[AttendanceLog]:
+        if employee_id is not None:
+            items = [e for e in items if e.employee_id == employee_id]
+        if zone_id is not None:
+            items = [e for e in items if e.zone_id == zone_id]
+        if status is not None:
+            items = [e for e in items if e.status is status]
+        if started_from is not None:
+            items = [e for e in items if e.started_at >= started_from]
+        if started_to is not None:
+            items = [e for e in items if e.started_at <= started_to]
         return items

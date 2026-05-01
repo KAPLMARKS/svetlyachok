@@ -36,6 +36,11 @@ from app.domain.zones.entities import ZoneType
 
 log = get_logger(__name__)
 
+# Минимальная длительность закрытой сессии. Используется как защита от
+# нарушения CHECK-constraint `ended_at > started_at` в граничных случаях
+# (сессия открыта и сразу же закрыта по timeout без единого extend).
+_MIN_CLOSED_SESSION_DURATION = timedelta(microseconds=1)
+
 
 @dataclass(frozen=True)
 class RecordAttendanceCommand:
@@ -187,6 +192,11 @@ class RecordAttendanceUseCase:
         schedule_end,
     ) -> AttendanceLog:
         """Закрывает существующую сессию: ended_at + duration + final status."""
+        # CHECK-constraint требует строго ended_at > started_at. В граничном
+        # случае (сессия открылась и сразу же закрылась по timeout без
+        # единого extend) ended_at == started_at — клампим вверх на минимум.
+        if ended_at <= session.started_at:
+            ended_at = session.started_at + _MIN_CLOSED_SESSION_DURATION
         # При закрытии текущий status уже установлен при открытии (PRESENT/LATE);
         # повышаем до OVERTIME, если ended_at позже schedule_end.
         current_status: AttendanceStatus = session.status

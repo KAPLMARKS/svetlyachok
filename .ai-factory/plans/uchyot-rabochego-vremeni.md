@@ -164,7 +164,7 @@
 
 ### Phase 6: Tests
 
-- [ ] **Task 13: FakeAttendanceRepository + unit-тесты use cases**
+- [x] **Task 13: FakeAttendanceRepository + unit-тесты use cases**
   - **Файлы:** `backend/tests/unit/application/fakes.py` (расширить), `backend/tests/unit/application/test_record_attendance.py`, `test_list_attendance.py`, `test_compute_attendance_summary.py`
   - **Что:**
     - В `fakes.py`: `FakeAttendanceRepository` со словарём `_storage`, поддержкой всех фильтров и `get_open_session_for_employee` через scan.
@@ -174,7 +174,7 @@
   - **Логи:** в тестах — нет.
   - **Маркер:** `pytestmark = pytest.mark.unit`.
 
-- [ ] **Task 14: Integration-тесты API**
+- [x] **Task 14: Integration-тесты API**
   - **Файлы:** `backend/tests/integration/api/test_attendance.py`
   - **Что:** Запуск через `client_with_db` + `db_engine` (testcontainers). Сценарии:
     - Seed: создать employee, zone (workplace), сделать `POST /classify` → проверить, что `GET /attendance?employee_id=X` вернёт 1 открытую сессию.
