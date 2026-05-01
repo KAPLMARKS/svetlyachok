@@ -43,7 +43,7 @@ Rationale: Этот план реализует вторую веху роадм
 
 ### Phase 1: Структура проекта и зависимости
 
-- [ ] **Task 1: Создать структуру папок `backend/` по Clean Architecture**
+- [x] **Task 1: Создать структуру папок `backend/` по Clean Architecture**
   - **Deliverable:** созданы все директории и файлы-заглушки `__init__.py`:
     - `backend/app/{domain,application,infrastructure,presentation,core}/__init__.py`
     - `backend/app/domain/{radiomap,positioning,attendance,employees,shared}/__init__.py`
@@ -60,7 +60,7 @@ Rationale: Этот план реализует вторую веху роадм
   - **LOGGING REQUIREMENTS:** на этом этапе кода нет — логирование настраивается в Task 4
   - **Acceptance:** `tree backend/ -L 4` показывает полную структуру из ARCHITECTURE.md
 
-- [ ] **Task 2: Настроить `pyproject.toml` с зависимостями**
+- [x] **Task 2: Настроить `pyproject.toml` с зависимостями**
   - **Deliverable:** `backend/pyproject.toml` с зафиксированными версиями
   - **Файлы:** новые — `backend/pyproject.toml`, `backend/.python-version`, `backend/README.md` (минимальный, с командами запуска)
   - **Зависимости (production):** `fastapi`, `uvicorn[standard]`, `pydantic`, `pydantic-settings`, `structlog`, `python-json-logger`
