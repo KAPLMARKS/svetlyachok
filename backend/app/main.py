@@ -26,8 +26,10 @@ from app.core.config import Settings, get_settings
 from app.core.logging import configure_logging, get_logger
 from app.infrastructure.db.session import dispose_engine, init_engine
 from app.presentation.api.v1.auth import router as auth_router
+from app.presentation.api.v1.employees import router as employees_router
 from app.presentation.api.v1.health import router as health_router
 from app.presentation.api.v1.me import router as me_router
+from app.presentation.api.v1.zones import router as zones_router
 from app.presentation.exception_handlers import register_exception_handlers
 from app.presentation.middleware.correlation_id import CorrelationIdMiddleware
 from app.presentation.middleware.rate_limit import limiter, rate_limit_exceeded_handler
@@ -88,12 +90,20 @@ def create_app() -> FastAPI:
     app.include_router(health_router, prefix="/api/v1")
     app.include_router(auth_router, prefix="/api/v1")
     app.include_router(me_router, prefix="/api/v1")
+    app.include_router(employees_router, prefix="/api/v1")
+    app.include_router(zones_router, prefix="/api/v1")
 
     log.info(
         "[main.create_app] ready",
         version=_app_version(),
         environment=settings.environment,
-        routers=["/api/v1/health", "/api/v1/auth", "/api/v1/me"],
+        routers=[
+            "/api/v1/health",
+            "/api/v1/auth",
+            "/api/v1/me",
+            "/api/v1/employees",
+            "/api/v1/zones",
+        ],
         middleware=[
             "CorrelationIdMiddleware",
             *(["CORSMiddleware"] if settings.cors_origins else []),
