@@ -103,6 +103,21 @@ class Settings(BaseSettings):
         description="Список разрешённых origin для CORS. Пустой = CORS отключён.",
     )
 
+    # --- Rate limiting ---
+
+    auth_login_rate_limit: str = Field(
+        default="5/minute",
+        description=(
+            "Лимит на /api/v1/auth/login. Формат slowapi: '<count>/<period>'. "
+            "Защита от брутфорса; снижать только в exceptional cases."
+        ),
+    )
+
+    auth_refresh_rate_limit: str = Field(
+        default="10/minute",
+        description="Лимит на /api/v1/auth/refresh. Формат slowapi.",
+    )
+
     # --- Validators ---
 
     @field_validator("jwt_secret")
