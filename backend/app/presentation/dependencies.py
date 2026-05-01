@@ -25,6 +25,20 @@ from app.application.employees.deactivate_employee import (
 from app.application.employees.list_employees import ListEmployeesUseCase
 from app.application.employees.refresh_tokens import RefreshTokensUseCase
 from app.application.employees.update_employee import UpdateEmployeeUseCase
+from app.application.radiomap.calibrate_radiomap import (
+    CreateCalibrationPointUseCase,
+)
+from app.application.radiomap.delete_calibration_point import (
+    DeleteCalibrationPointUseCase,
+)
+from app.application.radiomap.list_calibration_points import (
+    ListCalibrationPointsUseCase,
+)
+from app.application.radiomap.list_fingerprints import (
+    GetFingerprintUseCase,
+    ListFingerprintsUseCase,
+)
+from app.application.radiomap.submit_fingerprint import SubmitFingerprintUseCase
 from app.application.zones.create_zone import CreateZoneUseCase
 from app.application.zones.delete_zone import DeleteZoneUseCase
 from app.application.zones.list_zones import GetZoneUseCase, ListZonesUseCase
@@ -34,12 +48,16 @@ from app.core.logging import get_logger
 from app.domain.employees.entities import Employee, Role
 from app.domain.employees.repositories import EmployeeRepository
 from app.domain.employees.services import PasswordHasher
+from app.domain.radiomap.repositories import FingerprintRepository
 from app.domain.shared.exceptions import ForbiddenError, UnauthorizedError
 from app.domain.zones.repositories import ZoneRepository
 from app.infrastructure.auth import BcryptPasswordHasher, JwtProvider
 from app.infrastructure.db.session import get_session, get_sessionmaker
 from app.infrastructure.repositories.employees_repository import (
     SqlAlchemyEmployeeRepository,
+)
+from app.infrastructure.repositories.fingerprints_repository import (
+    SqlAlchemyFingerprintRepository,
 )
 from app.infrastructure.repositories.zones_repository import (
     SqlAlchemyZoneRepository,
@@ -311,3 +329,54 @@ def get_delete_zone_use_case(
     repo: ZoneRepository = Depends(get_zone_repository),
 ) -> DeleteZoneUseCase:
     return DeleteZoneUseCase(zone_repo=repo)
+
+
+# ---------------------------------------------------------------------------
+# Radiomap (fingerprints + calibration) use cases
+# ---------------------------------------------------------------------------
+
+
+def get_fingerprint_repository(
+    session: AsyncSession = Depends(get_session),
+) -> FingerprintRepository:
+    return SqlAlchemyFingerprintRepository(session)
+
+
+def get_submit_fingerprint_use_case(
+    repo: FingerprintRepository = Depends(get_fingerprint_repository),
+) -> SubmitFingerprintUseCase:
+    return SubmitFingerprintUseCase(fingerprint_repo=repo)
+
+
+def get_create_calibration_point_use_case(
+    fingerprint_repo: FingerprintRepository = Depends(get_fingerprint_repository),
+    zone_repo: ZoneRepository = Depends(get_zone_repository),
+) -> CreateCalibrationPointUseCase:
+    return CreateCalibrationPointUseCase(
+        fingerprint_repo=fingerprint_repo,
+        zone_repo=zone_repo,
+    )
+
+
+def get_list_fingerprints_use_case(
+    repo: FingerprintRepository = Depends(get_fingerprint_repository),
+) -> ListFingerprintsUseCase:
+    return ListFingerprintsUseCase(fingerprint_repo=repo)
+
+
+def get_fingerprint_use_case(
+    repo: FingerprintRepository = Depends(get_fingerprint_repository),
+) -> GetFingerprintUseCase:
+    return GetFingerprintUseCase(fingerprint_repo=repo)
+
+
+def get_list_calibration_points_use_case(
+    repo: FingerprintRepository = Depends(get_fingerprint_repository),
+) -> ListCalibrationPointsUseCase:
+    return ListCalibrationPointsUseCase(fingerprint_repo=repo)
+
+
+def get_delete_calibration_point_use_case(
+    repo: FingerprintRepository = Depends(get_fingerprint_repository),
+) -> DeleteCalibrationPointUseCase:
+    return DeleteCalibrationPointUseCase(fingerprint_repo=repo)
