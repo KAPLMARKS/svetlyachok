@@ -2,7 +2,7 @@
 
 # Implementation Plan: Базовый каркас backend (FastAPI + Clean Architecture)
 
-Branch: feature/backend-scaffold
+Branch: feature/backend-fastapi-clean-architecture-e190a5
 Created: 2026-05-01
 
 ## Settings
