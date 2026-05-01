@@ -94,7 +94,7 @@
 
 ### Phase 2: Database migration
 
-- [ ] **Task 5: Alembic-миграция — добавить last_seen_at**
+- [x] **Task 5: Alembic-миграция — добавить last_seen_at**
   - **Файлы:** `backend/alembic/versions/2026_05_02_*_add_last_seen_at.py`
   - **Что:** `ALTER TABLE attendance_logs ADD COLUMN last_seen_at TIMESTAMPTZ NOT NULL DEFAULT now()` (с дефолтом now() для совместимости с возможными существующими записями), затем убрать default `DROP DEFAULT` после backfill. Также добавить колонку в `AttendanceLogORM` в `backend/app/infrastructure/db/orm/attendance.py` (тип `Mapped[datetime]`, server_default=`func.now()` уже не нужен после миграции — но Mapped без default'а).
   - **Downgrade:** `ALTER TABLE attendance_logs DROP COLUMN last_seen_at`.
@@ -102,7 +102,7 @@
 
 ### Phase 3: Infrastructure
 
-- [ ] **Task 6: SqlAlchemyAttendanceRepository**
+- [x] **Task 6: SqlAlchemyAttendanceRepository**
   - **Файлы:** `backend/app/infrastructure/repositories/attendance_repository.py`
   - **Что:** Класс `SqlAlchemyAttendanceRepository(AttendanceRepository)` по образцу `SqlAlchemyFingerprintRepository`. Методы: `add`, `get_open_session_for_employee` (запрос с `WHERE ended_at IS NULL AND employee_id = ? ORDER BY started_at DESC LIMIT 1` — использует partial index), `update`, `list` с динамическими фильтрами, `count`, `get_by_id`. Маппинг ORM ↔ domain через статический `_to_domain(orm) -> AttendanceLog`.
   - **Логи:** `log.debug("[attendance.repo.{method}] ...")` на старте каждого метода с параметрами; `log.info` на add/update с id результата.
