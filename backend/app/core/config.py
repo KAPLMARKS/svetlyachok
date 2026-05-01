@@ -118,6 +118,21 @@ class Settings(BaseSettings):
         description="Лимит на /api/v1/auth/refresh. Формат slowapi.",
     )
 
+    # --- Attendance ---
+
+    attendance_inactivity_timeout_seconds: int = Field(
+        default=1800,
+        ge=60,
+        le=86_400,
+        description=(
+            "Порог inactivity-timeout для AttendanceLog (секунды). Если "
+            "разница now - last_seen_at превышает порог, открытая сессия "
+            "закрывается с ended_at=last_seen_at и открывается новая. "
+            "По умолчанию 1800 сек (30 минут). Допустимый диапазон: "
+            "60..86400 сек (1 минута .. 24 часа)."
+        ),
+    )
+
     # --- Validators ---
 
     @field_validator("jwt_secret")

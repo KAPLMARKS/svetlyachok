@@ -110,7 +110,7 @@
 
 ### Phase 4: Application use cases
 
-- [ ] **Task 7: RecordAttendanceUseCase**
+- [x] **Task 7: RecordAttendanceUseCase**
   - **Файлы:** `backend/app/application/attendance/record_attendance.py`
   - **Что:**
     - `dataclass(frozen=True) RecordAttendanceCommand`: `employee_id: int`, `zone_id: int`, `zone_type: ZoneType`, `now: datetime`.
@@ -119,7 +119,7 @@
   - **Логи:** `log.debug("[attendance.record.execute] start", employee_id, zone_id, now)`. `log.info` на каждое action: `attendance.session.opened`, `attendance.session.closed`, `attendance.session.extended`, `attendance.session.timeout_close_then_open`. Поля: `session_id`, `duration_seconds`, `status`.
   - **Ошибки:** `NotFoundError` если `Employee` не найден, `ValidationError` если `now` без timezone.
 
-- [ ] **Task 8: ListAttendanceUseCase**
+- [x] **Task 8: ListAttendanceUseCase**
   - **Файлы:** `backend/app/application/attendance/list_attendance.py`
   - **Что:**
     - `dataclass(frozen=True) ListAttendanceQuery`: все фильтры из repository.list + `requesting_user: Employee` (для self-only проверки).
@@ -127,7 +127,7 @@
     - Метод `execute(query) -> tuple[list[AttendanceLog], int]` (логи + total count). Для `requesting_user.role == EMPLOYEE` принудительно подставить `employee_id = requesting_user.id` или `raise ForbiddenError` если просит чужие.
   - **Логи:** `log.debug("[attendance.list.execute] start", filters)`. `log.info("[attendance.list.execute] done", total)`.
 
-- [ ] **Task 9: ComputeAttendanceSummaryUseCase**
+- [x] **Task 9: ComputeAttendanceSummaryUseCase**
   - **Файлы:** `backend/app/application/attendance/compute_summary.py`
   - **Что:**
     - `dataclass(frozen=True) AttendanceSummaryQuery`: `employee_id: int`, `period_from: datetime`, `period_to: datetime`, `requesting_user: Employee`.
