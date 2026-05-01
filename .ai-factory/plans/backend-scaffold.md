@@ -111,7 +111,7 @@ Rationale: Этот план реализует вторую веху роадм
 
 ### Phase 3: Доменные исключения и обработчики ошибок
 
-- [ ] **Task 5: Реализовать `app/domain/shared/exceptions.py` и `types.py`**
+- [x] **Task 5: Реализовать `app/domain/shared/exceptions.py` и `types.py`**
   - **Deliverable:**
     - Базовый класс `AppError(Exception)` с атрибутами `code: str`, `message: str`, `status_code: int = 500`, `details: dict | None = None`
     - Конкретные доменные ошибки: `ValidationError(AppError)` (400), `NotFoundError(AppError)` (404), `ConflictError(AppError)` (409), `UnauthorizedError(AppError)` (401), `ForbiddenError(AppError)` (403)
@@ -120,7 +120,7 @@ Rationale: Этот план реализует вторую веху роадм
   - **LOGGING REQUIREMENTS:** N/A (sync исключения, логируются в exception handlers Task 6)
   - **Acceptance:** unit-тест проверяет, что `raise ValidationError(code="invalid_email", message="...")` имеет правильный `status_code=400`
 
-- [ ] **Task 6: Реализовать RFC 7807 exception handlers в `app/presentation/exception_handlers.py`**
+- [x] **Task 6: Реализовать RFC 7807 exception handlers в `app/presentation/exception_handlers.py`**
   - **Deliverable:**
     - Функция `register_exception_handlers(app: FastAPI) -> None`, регистрирующая:
       - Handler для `AppError` → JSON `{type, title, status, detail, instance, code, correlation_id}` (RFC 7807 + расширения)
