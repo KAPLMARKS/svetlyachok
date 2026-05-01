@@ -72,7 +72,7 @@ Rationale: Этот план реализует вторую веху роадм
 
 ### Phase 2: Конфигурация и логирование
 
-- [ ] **Task 3: Реализовать `app/core/config.py` через `pydantic-settings`**
+- [x] **Task 3: Реализовать `app/core/config.py` через `pydantic-settings`**
   - **Deliverable:** класс `Settings` с полями:
     - `app_name: str = "svetlyachok-backend"`
     - `environment: Literal["development", "staging", "production"]`
@@ -93,7 +93,7 @@ Rationale: Этот план реализует вторую веху роадм
     - Использовать формат: `[Module.function] message {context}`
   - **Acceptance:** `python -c "from app.core.config import get_settings; print(get_settings().model_dump_json())"` выдаёт JSON с настройками; отсутствие `.env` или обязательного поля приводит к понятной ошибке валидации
 
-- [ ] **Task 4: Реализовать `app/core/logging.py` со structlog + correlation_id middleware**
+- [x] **Task 4: Реализовать `app/core/logging.py` со structlog + correlation_id middleware**
   - **Deliverable:**
     - Функция `configure_logging(settings: Settings) -> None` настраивает structlog с процессорами: `add_log_level`, `TimeStamper(fmt="iso")`, `CallsiteParameterAdder({pathname, lineno})`, finalformatter — JSON или Console в зависимости от `settings.log_format`
     - Bound logger: `get_logger(name: str = __name__) -> structlog.BoundLogger`
