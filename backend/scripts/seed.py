@@ -29,6 +29,7 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from app.core.config import get_settings
 from app.core.logging import configure_logging, get_logger
+from app.infrastructure.auth import BcryptPasswordHasher
 from app.infrastructure.db.orm import (
     Employee,
     Fingerprint,
@@ -83,30 +84,46 @@ ZONES_SEED: list[dict] = [
 ]
 
 
-# Hashed_password — заглушка. Реальный bcrypt-хеш появится на вехе
-# «Аутентификация (JWT)»; тогда же будет и /api/v1/auth/register.
-_PLACEHOLDER_PASSWORD = "PLACEHOLDER_seed_only_replace_on_auth_milestone"  # noqa: S105
+# Dev-пароли. Хешируются bcrypt'ом при запуске seed-скрипта (рандомная
+# соль каждый раз — повторный запуск не даёт стабильный hash, но
+# таблица employees уже не пустая после первого запуска: ON CONFLICT
+# DO NOTHING пропустит вставку, и пароли admin/employee останутся
+# теми, что были выписаны при первом seed'е.).
+#
+# В production эти пароли НИКОГДА не должны использоваться: документировано
+# в backend/README.md → раздел «Аутентификация».
+_DEV_ADMIN_PASSWORD = "admin12345"  # noqa: S105  — dev-only seed
+_DEV_EMPLOYEE_PASSWORD = "employee12345"  # noqa: S105  — dev-only seed
 
-EMPLOYEES_SEED: list[dict] = [
-    {
-        "email": "admin@svetlyachok.local",
-        "full_name": "Админ Тестовый",
-        "role": Role.ADMIN,
-        "hashed_password": _PLACEHOLDER_PASSWORD,
-        "is_active": True,
-        "schedule_start": None,
-        "schedule_end": None,
-    },
-    {
-        "email": "employee@svetlyachok.local",
-        "full_name": "Иванов Иван Иванович",
-        "role": Role.EMPLOYEE,
-        "hashed_password": _PLACEHOLDER_PASSWORD,
-        "is_active": True,
-        "schedule_start": time(9, 0),
-        "schedule_end": time(18, 0),
-    },
-]
+
+def _build_employees_seed(hasher: BcryptPasswordHasher) -> list[dict]:
+    """Генерирует bcrypt-хеши свежих паролей при каждом запуске.
+
+    Делаем это функцией, а не module-level литералом, чтобы хеши
+    создавались только при реальном запуске seed (включая ON CONFLICT
+    в существующей БД, чтобы не тратить ~250 ms на каждый импорт модуля
+    в тестах).
+    """
+    return [
+        {
+            "email": "admin@svetlyachok.local",
+            "full_name": "Админ Тестовый",
+            "role": Role.ADMIN,
+            "hashed_password": hasher.hash(_DEV_ADMIN_PASSWORD),
+            "is_active": True,
+            "schedule_start": None,
+            "schedule_end": None,
+        },
+        {
+            "email": "employee@svetlyachok.local",
+            "full_name": "Иванов Иван Иванович",
+            "role": Role.EMPLOYEE,
+            "hashed_password": hasher.hash(_DEV_EMPLOYEE_PASSWORD),
+            "is_active": True,
+            "schedule_start": time(9, 0),
+            "schedule_end": time(18, 0),
+        },
+    ]
 
 
 # Калибровочные отпечатки: по одному на 3 разных типа зон. RSSI-значения
@@ -162,18 +179,19 @@ async def _seed_zones() -> tuple[int, int]:
     return inserted, skipped
 
 
-async def _seed_employees() -> tuple[int, int]:
+async def _seed_employees(hasher: BcryptPasswordHasher) -> tuple[int, int]:
+    employees_seed = _build_employees_seed(hasher)
     sessionmaker = get_sessionmaker()
     async with sessionmaker() as session, session.begin():
         stmt = (
             pg_insert(Employee.__table__)
-            .values(EMPLOYEES_SEED)
+            .values(employees_seed)
             .on_conflict_do_nothing(index_elements=["email"])
             .returning(Employee.__table__.c.id)
         )
         result = await session.execute(stmt)
         inserted = len(result.scalars().all())
-    skipped = len(EMPLOYEES_SEED) - inserted
+    skipped = len(employees_seed) - inserted
     log.info("[seed.employees] done", inserted=inserted, skipped=skipped)
     return inserted, skipped
 
@@ -245,10 +263,11 @@ async def main() -> int:
     )
 
     init_engine(settings)
+    hasher = BcryptPasswordHasher()
 
     try:
         zones_ins, zones_skip = await _seed_zones()
-        emp_ins, emp_skip = await _seed_employees()
+        emp_ins, emp_skip = await _seed_employees(hasher)
         fp_ins, fp_skip = await _seed_fingerprints()
     except Exception:
         log.error("[seed] failed", exc_info=True)
