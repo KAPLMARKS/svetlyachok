@@ -127,6 +127,12 @@ python scripts/seed.py
 | `GET` | `/api/v1/zones/{id}` | Детали зоны (любой авторизованный) |
 | `PATCH` | `/api/v1/zones/{id}` | Обновить зону (admin) |
 | `DELETE` | `/api/v1/zones/{id}` | Удалить зону (admin); 409 если есть связанные attendance_logs |
+| `POST` | `/api/v1/fingerprints` | Принять live-радиоотпечаток (любой авторизованный) |
+| `GET` | `/api/v1/fingerprints` | Список отпечатков с фильтрами (admin) |
+| `GET` | `/api/v1/fingerprints/{id}` | Детали отпечатка (admin) |
+| `POST` | `/api/v1/calibration/points` | Создать калибровочную точку (admin) |
+| `GET` | `/api/v1/calibration/points` | Список калибровочных точек (любой авторизованный) |
+| `DELETE` | `/api/v1/calibration/points/{id}` | Удалить калибровочную точку (admin); 400 если это live-отпечаток |
 
 Полный OpenAPI: http://localhost:8000/docs (Swagger UI), http://localhost:8000/redoc.
 
@@ -317,6 +323,68 @@ curl -X DELETE http://localhost:8000/api/v1/zones/${ZONE_ID} \
   (FK ondelete=RESTRICT). Удалить можно только когда нет истории.
   Если нужно «архивировать» — переименуйте зону в нерелевантную; в
   будущем можно добавить `archived_at` через миграцию.
+
+## Радиоотпечатки и калибровка
+
+API принимает Wi-Fi RSSI-отпечатки двух видов:
+
+- **Live** — замеры с устройства сотрудника во время работы. Используются ML-классификатором (на следующей вехе) для определения зоны.
+- **Калибровочные** — эталонные точки, привязанные к зоне. Admin создаёт через web-панель; ML использует как обучающую выборку.
+
+Формат `rssi_vector`: словарь `BSSID → dBm`. Сервер нормализует BSSID (любой регистр и `:` / `-` разделители → канонический верхний регистр с `:`). dBm валидируется в `[-100, 0]`. Минимум 1, максимум 200 точек доступа на отпечаток.
+
+### Live-отпечаток (любой авторизованный)
+
+```bash
+curl -X POST http://localhost:8000/api/v1/fingerprints \
+  -H "Authorization: Bearer ${ACCESS}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "captured_at": "2026-05-01T12:34:56Z",
+    "rssi_vector": {
+      "AA:BB:CC:DD:EE:01": -45,
+      "AA:BB:CC:DD:EE:02": -67,
+      "AA:BB:CC:DD:EE:03": -82
+    },
+    "sample_count": 3,
+    "device_id": "android-12345"
+  }'
+```
+
+Сервер автоматически проставляет `employee_id=current_user.id`, `is_calibration=false`, `zone_id=null`. Классификация (определение зоны) — задача следующей вехи ML.
+
+**Anti-fraud по `captured_at`:**
+- Не принимаем «из будущего» более чем на 5 минут (clock skew допускается, но не больше)
+- Не принимаем старее 7 дней (несвежие данные после длительного офлайна — для классификации бесполезны)
+
+### Калибровочная точка (admin)
+
+```bash
+curl -X POST http://localhost:8000/api/v1/calibration/points \
+  -H "Authorization: Bearer ${ADMIN_ACCESS}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "zone_id": 42,
+    "captured_at": "2026-05-01T12:34:56Z",
+    "rssi_vector": {"AA:BB:CC:DD:EE:01": -45, "AA:BB:CC:DD:EE:02": -67},
+    "sample_count": 5
+  }'
+```
+
+`zone_id` обязателен (CHECK-инвариант БД: калибровочный отпечаток должен быть привязан к зоне). Несуществующий `zone_id` → 404 `zone_not_found`.
+
+### Удаление калибровочной точки (admin)
+
+```bash
+curl -X DELETE http://localhost:8000/api/v1/calibration/points/${ID} \
+  -H "Authorization: Bearer ${ADMIN_ACCESS}"
+```
+
+Защита: эндпоинт удаляет ТОЛЬКО калибровочные отпечатки. Попытка удалить live-отпечаток через `/calibration/points/{id}` → 400 `not_a_calibration_point` (нужно использовать другой эндпоинт, который появится при необходимости).
+
+### Список калибровочных точек
+
+`GET /api/v1/calibration/points` доступен любому авторизованному (mobile/web нужно для UI калибровки и визуализации radiomap'а). Опциональный фильтр `?zone_id=N`.
 
 ## Архитектура
 
