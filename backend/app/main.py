@@ -19,14 +19,18 @@ from contextlib import asynccontextmanager
 from importlib.metadata import PackageNotFoundError, version
 
 from fastapi import FastAPI
+from slowapi.errors import RateLimitExceeded
 from starlette.middleware.cors import CORSMiddleware
 
 from app.core.config import Settings, get_settings
 from app.core.logging import configure_logging, get_logger
 from app.infrastructure.db.session import dispose_engine, init_engine
+from app.presentation.api.v1.auth import router as auth_router
 from app.presentation.api.v1.health import router as health_router
+from app.presentation.api.v1.me import router as me_router
 from app.presentation.exception_handlers import register_exception_handlers
 from app.presentation.middleware.correlation_id import CorrelationIdMiddleware
+from app.presentation.middleware.rate_limit import limiter, rate_limit_exceeded_handler
 
 
 def create_app() -> FastAPI:
@@ -75,14 +79,21 @@ def create_app() -> FastAPI:
     # Exception handlers (RFC 7807)
     register_exception_handlers(app)
 
+    # Rate limiter — slowapi требует app.state.limiter, отдельный handler
+    # на RateLimitExceeded.
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
+
     # Routers
     app.include_router(health_router, prefix="/api/v1")
+    app.include_router(auth_router, prefix="/api/v1")
+    app.include_router(me_router, prefix="/api/v1")
 
     log.info(
         "[main.create_app] ready",
         version=_app_version(),
         environment=settings.environment,
-        routers=["/api/v1/health"],
+        routers=["/api/v1/health", "/api/v1/auth", "/api/v1/me"],
         middleware=[
             "CorrelationIdMiddleware",
             *(["CORSMiddleware"] if settings.cors_origins else []),

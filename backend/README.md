@@ -112,8 +112,86 @@ python scripts/seed.py
 | Метод | Путь | Назначение |
 |-------|------|-----------|
 | `GET` | `/api/v1/health` | Healthcheck (liveness + реальный `SELECT 1` к БД) |
+| `POST` | `/api/v1/auth/login` | Вход по email + паролю → пара JWT (access + refresh) |
+| `POST` | `/api/v1/auth/refresh` | Обмен refresh-токена на новый access |
+| `GET` | `/api/v1/me` | Информация о текущем пользователе (требует Bearer access) |
 
 Полный OpenAPI: http://localhost:8000/docs (Swagger UI), http://localhost:8000/redoc.
+
+## Аутентификация
+
+API защищается JSON Web Tokens. Схема: `email + password` → пара токенов
+(`access` 30 минут, `refresh` 7 дней) → клиент передаёт access в заголовке
+`Authorization: Bearer <token>`.
+
+### Получить пару токенов
+
+```bash
+curl -X POST http://localhost:8000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@svetlyachok.local","password":"admin12345"}'
+```
+
+Ответ:
+
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "token_type": "bearer",
+  "expires_in": 1800
+}
+```
+
+### Использовать access-токен
+
+```bash
+curl http://localhost:8000/api/v1/me \
+  -H "Authorization: Bearer ${ACCESS_TOKEN}"
+```
+
+### Обновить access без повторного login
+
+```bash
+curl -X POST http://localhost:8000/api/v1/auth/refresh \
+  -H "Content-Type: application/json" \
+  -d '{"refresh_token":"<refresh-from-login>"}'
+```
+
+Refresh переиспользуется до истечения срока (без token rotation на этой
+вехе — добавим вместе с blacklist'ом jti, если в полевых испытаниях
+обнаружим повторное использование украденных токенов).
+
+### Rate limiting
+
+`/auth/login` ограничен **5 запросами в минуту на IP**, `/auth/refresh` —
+**10 в минуту**. Превышение → `429 Too Many Requests` + заголовок
+`Retry-After`. Лимиты конфигурируются переменными окружения
+`AUTH_LOGIN_RATE_LIMIT` и `AUTH_REFRESH_RATE_LIMIT` (формат slowapi:
+`<count>/<period>`).
+
+### Безопасность
+
+- Хеширование паролей: **bcrypt с work factor 12** (рекомендация OWASP 2024)
+- Алгоритм JWT: **HS256**, секрет из `JWT_SECRET` (минимум 32 символа,
+  валидируется при старте)
+- Защита от user enumeration: при missing/inactive user всё равно тратится
+  bcrypt-цикл (timing-safe), все три причины fail возвращают единый
+  `401 invalid_credentials`
+- Refresh-токен НЕ принимается как access (поле `type` в payload)
+- Access-токен НЕ принимается как refresh
+- Rate limiting на /auth-эндпоинтах против брутфорса
+- В response никогда не возвращается `hashed_password`
+- В логах никогда не появляются пароли или сами токены — только
+  `correlation_id` и `employee_id`
+
+**Production-заметки:**
+
+- НИКОГДА не используй seed-пароли (`admin12345`, `employee12345`) в production
+- Ротация `JWT_SECRET` инвалидирует все активные токены
+- Для горизонтального масштабирования (несколько uvicorn worker'ов) перейти
+  на slowapi с Redis-storage — текущая in-memory реализация даёт ограничение
+  per-process
 
 ## Архитектура
 
