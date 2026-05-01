@@ -25,6 +25,7 @@ from app.application.employees.deactivate_employee import (
 from app.application.employees.list_employees import ListEmployeesUseCase
 from app.application.employees.refresh_tokens import RefreshTokensUseCase
 from app.application.employees.update_employee import UpdateEmployeeUseCase
+from app.application.positioning.classify_location import ClassifyLocationUseCase
 from app.application.radiomap.calibrate_radiomap import (
     CreateCalibrationPointUseCase,
 )
@@ -48,11 +49,13 @@ from app.core.logging import get_logger
 from app.domain.employees.entities import Employee, Role
 from app.domain.employees.repositories import EmployeeRepository
 from app.domain.employees.services import PasswordHasher
+from app.domain.positioning.classifiers import PositionClassifier
 from app.domain.radiomap.repositories import FingerprintRepository
 from app.domain.shared.exceptions import ForbiddenError, UnauthorizedError
 from app.domain.zones.repositories import ZoneRepository
 from app.infrastructure.auth import BcryptPasswordHasher, JwtProvider
 from app.infrastructure.db.session import get_session, get_sessionmaker
+from app.infrastructure.ml.wknn_classifier import WknnClassifier
 from app.infrastructure.repositories.employees_repository import (
     SqlAlchemyEmployeeRepository,
 )
@@ -380,3 +383,39 @@ def get_delete_calibration_point_use_case(
     repo: FingerprintRepository = Depends(get_fingerprint_repository),
 ) -> DeleteCalibrationPointUseCase:
     return DeleteCalibrationPointUseCase(fingerprint_repo=repo)
+
+
+# ---------------------------------------------------------------------------
+# Positioning (ML-классификация)
+# ---------------------------------------------------------------------------
+
+
+@lru_cache(maxsize=1)
+def _position_classifier_singleton() -> WknnClassifier:
+    """Module-level singleton классификатора.
+
+    Singleton нужен для кеширования обученной модели между запросами:
+    train занимает ~50 ms на 100 калибровочных точках; без singleton
+    classifier обучался бы на каждый запрос.
+
+    На пилоте используем WKNN. Для A/B-сравнения с RF на следующих
+    итерациях добавим feature flag в Settings.
+    """
+    return WknnClassifier()
+
+
+def get_position_classifier() -> PositionClassifier:
+    """FastAPI dependency: singleton WKNN-классификатор."""
+    return _position_classifier_singleton()
+
+
+def get_classify_location_use_case(
+    fingerprint_repo: FingerprintRepository = Depends(get_fingerprint_repository),
+    zone_repo: ZoneRepository = Depends(get_zone_repository),
+    classifier: PositionClassifier = Depends(get_position_classifier),
+) -> ClassifyLocationUseCase:
+    return ClassifyLocationUseCase(
+        fingerprint_repo=fingerprint_repo,
+        zone_repo=zone_repo,
+        classifier=classifier,
+    )
