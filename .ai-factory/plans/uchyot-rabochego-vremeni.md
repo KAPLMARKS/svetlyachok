@@ -186,7 +186,7 @@
 
 ### Phase 7: Документация
 
-- [ ] **Task 15: backend/README + docs/attendance.md**
+- [x] **Task 15: backend/README + docs/attendance.md**
   - **Файлы:** `backend/README.md` (раздел attendance), `docs/attendance.md` (новый)
   - **Что:** В `backend/README.md` — краткое описание endpoints `/api/v1/attendance` и `/api/v1/attendance/summary`, env-переменная `ATTENDANCE_INACTIVITY_TIMEOUT_SECONDS`. В `docs/attendance.md` — детальное описание логики сессий (5 веток), семантики статусов (present/late/overtime), как `/classify` авто-создаёт сессии, как считается `work_hours_total`, лимиты MVP (открытые сессии исключены из summary, overtime считается всю длительность сессии).
   - **Язык:** русский.

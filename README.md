@@ -48,6 +48,7 @@ uvicorn app.main:app --reload --port 8000
 | [Архитектура](docs/architecture.md) | Clean Architecture, слои, зависимости |
 | [API Reference](docs/api.md) | REST endpoints, контракты, форматы ошибок |
 | [Конфигурация](docs/configuration.md) | Переменные окружения, настройки |
+| [Учёт рабочего времени](docs/attendance.md) | AttendanceLog, логика сессий, REST API `/attendance` |
 
 ## Контекст для AI-агентов
 
