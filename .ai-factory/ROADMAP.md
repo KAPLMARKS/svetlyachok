@@ -11,7 +11,7 @@
 - [x] **Управление сотрудниками и зонами** — CRUD employees, ролей, рабочих зон (рабочее место, коридор, переговорная, вне офиса) — backend API
 - [x] **Приём радиоотпечатков и калибровка** — endpoint POST `/api/v1/fingerprints` для приёма с устройства, endpoint POST `/api/v1/calibration/points` для эталонных точек admin-режима
 - [x] **ML-классификаторы (WKNN + Random Forest)** — реализация `PositionClassifier` Protocol через scikit-learn (KNN с distance-weighting и Random Forest), извлечение признаков из RSSI-векторов, конфигурация гиперпараметров в `infrastructure/ml/config.py`
-- [ ] **Учёт рабочего времени** — AttendanceLog автоматически создаётся при `POST /api/v1/positioning/classify`; use case `RecordAttendanceUseCase` открывает/закрывает сессии по смене зоны и таймауту неактивности; расчёт `work_hours`, опозданий и переработок относительно `Employee.schedule_start/end`; REST API `GET /api/v1/attendance` с фильтрами (employee_id, from, to) и агрегацией по периоду. **Без интеграции с 1С/ERP — простой REST API.**
+- [x] **Учёт рабочего времени** — AttendanceLog автоматически создаётся при `POST /api/v1/positioning/classify`; use case `RecordAttendanceUseCase` открывает/закрывает сессии по смене зоны и таймауту неактивности; расчёт `work_hours`, опозданий и переработок относительно `Employee.schedule_start/end`; REST API `GET /api/v1/attendance` с фильтрами (employee_id, from, to) и агрегацией по периоду. **Без интеграции с 1С/ERP — простой REST API.**
 - [ ] **Backend MVP-доработки** — критичные для рабочего продукта задачи, без которых mobile/web не заработают:
   - **ML cache invalidation**: после CRUD калибровочных точек singleton-классификатор должен переобучиться без рестарта backend (иначе после `/calibration/points` admin не увидит изменений на mobile до перезапуска)
   - **Bulk fingerprints**: `POST /api/v1/fingerprints/batch` для отправки накопленного офлайн-кэша с mobile (нужно для sqflite-кэша + WorkManager: телефон не всегда онлайн, копит отпечатки и выгружает пачкой)
@@ -50,6 +50,7 @@
 | Управление сотрудниками и зонами | 2026-05-01 |
 | Приём радиоотпечатков и калибровка | 2026-05-01 |
 | ML-классификаторы (WKNN + Random Forest) | 2026-05-01 |
+| Учёт рабочего времени | 2026-05-02 |
 
 ## Что намеренно НЕ в roadmap (отложено или отменено)
 

@@ -79,6 +79,14 @@ class AttendanceLog(Base, TimestampMixin):
         DateTime(timezone=True),
         nullable=True,
     )
+    # Момент последнего «замечания» сотрудника в зоне. Обновляется на
+    # каждом классификации в той же зоне. Используется для inactivity-
+    # timeout: если now - last_seen_at > ATTENDANCE_INACTIVITY_TIMEOUT_SECONDS,
+    # сессия закрывается с ended_at=last_seen_at.
+    last_seen_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+    )
 
     # Денормализованная длительность для быстрых отчётов. Заполняется
     # при закрытии сессии. Хранение отдельным полем + CHECK выгоднее

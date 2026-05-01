@@ -133,7 +133,9 @@ python scripts/seed.py
 | `POST` | `/api/v1/calibration/points` | Создать калибровочную точку (admin) |
 | `GET` | `/api/v1/calibration/points` | Список калибровочных точек (любой авторизованный) |
 | `DELETE` | `/api/v1/calibration/points/{id}` | Удалить калибровочную точку (admin); 400 если это live-отпечаток |
-| `POST` | `/api/v1/positioning/classify` | Классификация позиции по RSSI-вектору (любой авторизованный) |
+| `POST` | `/api/v1/positioning/classify` | Классификация позиции по RSSI-вектору (любой авторизованный); авто-создаёт AttendanceLog |
+| `GET` | `/api/v1/attendance` | Список сессий присутствия с фильтрами (admin — любой; employee — только свои) |
+| `GET` | `/api/v1/attendance/summary` | Агрегация work_hours / lateness / overtime за период (admin — любой; employee — только себя) |
 
 Полный OpenAPI: http://localhost:8000/docs (Swagger UI), http://localhost:8000/redoc.
 
@@ -471,6 +473,68 @@ pytest -m ml -v -s
 инвалидируется автоматически**. Чтобы применить новую калибровку —
 рестарт backend'а. Для production добавим explicit invalidate-flag
 или event-driven retrain (см. open questions в плане вехи).
+
+## Учёт рабочего времени
+
+Эндпоинты `/api/v1/attendance` и `/api/v1/attendance/summary` дают учёт
+посещаемости без интеграции с 1С/ERP — простой REST API для web-панели и
+отчётов. AttendanceLog авто-создаётся при `POST /api/v1/positioning/classify`.
+
+### Логика сессий
+
+При каждом успешном `/classify` use case `RecordAttendanceUseCase`
+управляет открытой сессией сотрудника:
+
+1. **Нет открытой** → создать новую (`started_at = now`).
+2. **Та же зона, в пределах timeout** → продлить (`last_seen_at = now`).
+3. **Та же зона, после timeout** → закрыть с `ended_at = last_seen_at`,
+   открыть новую с `started_at = now`.
+4. **Другая зона** → закрыть с `ended_at = now`, открыть новую с
+   `started_at = now`, `zone_id = новой`.
+
+Inactivity-timeout настраивается через env `ATTENDANCE_INACTIVITY_TIMEOUT_SECONDS`
+(по умолчанию `1800` = 30 минут, диапазон 60..86400).
+
+### Статусы сессии
+
+- `present` — нормальное присутствие (рабочая зона в графике, или нерабочая).
+- `late` — приход в рабочую зону позже `Employee.schedule_start`.
+- `overtime` — закрытие сессии после `Employee.schedule_end`.
+- `absent` — резерв для будущих агрегаций (use case'ом не присваивается).
+
+При отсутствии графика у сотрудника (`schedule_start IS NULL`) статус
+всегда `present` — без late/overtime.
+
+### Агрегация (GET /attendance/summary)
+
+За указанный период возвращает:
+
+- `work_hours_total`: суммарные часы в зонах типа `workplace` (только
+  закрытые сессии).
+- `lateness_count`: число сессий со статусом `late`.
+- `overtime_seconds_total`: суммарные секунды по сессиям `overtime`
+  (упрощённо — вся длительность; точный расчёт overtime-секунд
+  относительно `schedule_end` оставлен на следующую итерацию).
+- `sessions_count`: общее число сессий в периоде (вкл. открытые).
+
+⚠️ Открытые сессии (`ended_at IS NULL`) исключены из аддитивных метрик
+(`work_hours_total`, `overtime_seconds_total`), но учтены в
+`sessions_count`.
+
+### Доступ
+
+| Эндпоинт | Admin | Employee |
+|----------|-------|----------|
+| `GET /attendance` | OK (любой `employee_id`) | OK (только свой `employee_id` подставляется автоматически) |
+| `GET /attendance/summary` | OK (любой `employee_id`) | OK (`employee_id` обязателен и должен совпадать с `current_user.id`) |
+
+Self-only проверка делается в use case (`ListAttendanceUseCase` /
+`ComputeAttendanceSummaryUseCase`); при попытке employee запросить чужие
+данные — `403 attendance_self_only`.
+
+### Подробнее
+
+Полное описание логики, статусов и примеры — в [`docs/attendance.md`](../docs/attendance.md).
 
 ## Архитектура
 

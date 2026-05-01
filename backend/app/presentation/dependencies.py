@@ -9,12 +9,18 @@ Composition root: связывает Protocol'ы из domain/application с
 from __future__ import annotations
 
 from collections.abc import Callable
+from datetime import timedelta
 from functools import lru_cache
 
 from fastapi import Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from app.application.attendance.compute_summary import (
+    ComputeAttendanceSummaryUseCase,
+)
+from app.application.attendance.list_attendance import ListAttendanceUseCase
+from app.application.attendance.record_attendance import RecordAttendanceUseCase
 from app.application.employees.authenticate import LoginUseCase
 from app.application.employees.change_password import ChangePasswordUseCase
 from app.application.employees.create_employee import CreateEmployeeUseCase
@@ -46,6 +52,7 @@ from app.application.zones.list_zones import GetZoneUseCase, ListZonesUseCase
 from app.application.zones.update_zone import UpdateZoneUseCase
 from app.core.config import Settings, get_settings
 from app.core.logging import get_logger
+from app.domain.attendance.repositories import AttendanceRepository
 from app.domain.employees.entities import Employee, Role
 from app.domain.employees.repositories import EmployeeRepository
 from app.domain.employees.services import PasswordHasher
@@ -56,6 +63,9 @@ from app.domain.zones.repositories import ZoneRepository
 from app.infrastructure.auth import BcryptPasswordHasher, JwtProvider
 from app.infrastructure.db.session import get_session, get_sessionmaker
 from app.infrastructure.ml.wknn_classifier import WknnClassifier
+from app.infrastructure.repositories.attendance_repository import (
+    SqlAlchemyAttendanceRepository,
+)
 from app.infrastructure.repositories.employees_repository import (
     SqlAlchemyEmployeeRepository,
 )
@@ -418,4 +428,47 @@ def get_classify_location_use_case(
         fingerprint_repo=fingerprint_repo,
         zone_repo=zone_repo,
         classifier=classifier,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Attendance (учёт рабочего времени)
+# ---------------------------------------------------------------------------
+
+
+def get_attendance_repository(
+    session: AsyncSession = Depends(get_session),
+) -> AttendanceRepository:
+    """FastAPI dependency: репозиторий записей посещаемости."""
+    return SqlAlchemyAttendanceRepository(session)
+
+
+def get_record_attendance_use_case(
+    attendance_repo: AttendanceRepository = Depends(get_attendance_repository),
+    employee_repo: EmployeeRepository = Depends(get_employee_repository),
+    settings: Settings = Depends(get_settings),
+) -> RecordAttendanceUseCase:
+    """FastAPI dependency: RecordAttendance с inactivity_timeout из Settings."""
+    return RecordAttendanceUseCase(
+        attendance_repo=attendance_repo,
+        employee_repo=employee_repo,
+        inactivity_timeout=timedelta(
+            seconds=settings.attendance_inactivity_timeout_seconds
+        ),
+    )
+
+
+def get_list_attendance_use_case(
+    attendance_repo: AttendanceRepository = Depends(get_attendance_repository),
+) -> ListAttendanceUseCase:
+    return ListAttendanceUseCase(attendance_repo=attendance_repo)
+
+
+def get_compute_attendance_summary_use_case(
+    attendance_repo: AttendanceRepository = Depends(get_attendance_repository),
+    zone_repo: ZoneRepository = Depends(get_zone_repository),
+) -> ComputeAttendanceSummaryUseCase:
+    return ComputeAttendanceSummaryUseCase(
+        attendance_repo=attendance_repo,
+        zone_repo=zone_repo,
     )
