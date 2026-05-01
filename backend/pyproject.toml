@@ -23,7 +23,7 @@ dependencies = [
   # Web framework и валидация
   "fastapi>=0.115.0,<0.120.0",
   "uvicorn[standard]>=0.30.0,<0.40.0",
-  "pydantic>=2.8.0,<3.0.0",
+  "pydantic[email]>=2.8.0,<3.0.0",
   "pydantic-settings>=2.5.0,<3.0.0",
   # Логирование
   "structlog>=24.4.0,<26.0.0",
@@ -33,6 +33,10 @@ dependencies = [
   "asyncpg>=0.29.0,<0.31.0",
   "alembic>=1.13.0,<2.0.0",
   "greenlet>=3.0.0,<4.0.0",
+  # Аутентификация
+  "bcrypt>=4.2.0,<5.0.0",
+  "pyjwt[crypto]>=2.9.0,<3.0.0",
+  "slowapi>=0.1.9,<0.2.0",
 ]
 
 [project.optional-dependencies]
@@ -97,6 +101,7 @@ ignore = [
 "tests/**" = ["S101", "S105", "S106"]  # тесты могут использовать assert и моковые credentials
 # FastAPI идиома: `param: Type = Depends(...)` использует function call в default — это норма
 "app/presentation/api/**" = ["B008"]
+"app/presentation/dependencies.py" = ["B008"]
 "app/presentation/exception_handlers.py" = ["B008"]
 
 [tool.ruff.format]
