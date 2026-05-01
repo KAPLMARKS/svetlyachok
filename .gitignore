@@ -109,8 +109,12 @@ mlruns/
 
 # Временные файлы Claude / агентов
 .claude/local/
+.claude/settings.local.json
 .aif-tmp/
 .handoff/
+
+# Одноразовые скрипты handoff-интеграции
+.ai-factory/update-handoff-task.mjs
 
 # Build outputs
 *.apk
