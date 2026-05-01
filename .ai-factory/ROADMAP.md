@@ -7,7 +7,7 @@
 - [x] **Настройка контекста AI Factory** — DESCRIPTION.md, ARCHITECTURE.md, AGENTS.md, базовые правила, скиллы и MCP установлены и сконфигурированы
 - [x] **Базовый каркас backend** — FastAPI scaffold по Clean Architecture, настройка `pydantic-settings`, structlog-логирование, healthcheck endpoint, базовый exception handler RFC 7807
 - [x] **База данных и миграции** — PostgreSQL подключение через SQLAlchemy 2.x async, Alembic-миграции, ORM-модели (employees, zones, fingerprints, attendance_logs), seed-скрипты для тестовых данных
-- [ ] **Аутентификация (JWT)** — login/refresh endpoints, bcrypt хеши паролей, защита роутов через FastAPI Depends, rate limiting на /auth
+- [x] **Аутентификация (JWT)** — login/refresh endpoints, bcrypt хеши паролей, защита роутов через FastAPI Depends, rate limiting на /auth
 - [ ] **Управление сотрудниками и зонами** — CRUD employees, ролей, рабочих зон (рабочее место, коридор, переговорная, вне офиса) — backend API
 - [ ] **Приём радиоотпечатков и калибровка** — endpoint POST `/api/v1/fingerprints` для приёма с устройства, endpoint POST `/api/v1/calibration/points` для эталонных точек admin-режима
 - [ ] **ML-классификаторы (WKNN + Random Forest)** — реализация `PositionClassifier` Protocol через scikit-learn (KNN с distance-weighting и Random Forest), извлечение признаков из RSSI-векторов, конфигурация гиперпараметров в `infrastructure/ml/config.py`
@@ -26,3 +26,4 @@
 | Настройка контекста AI Factory | 2026-05-01 |
 | Базовый каркас backend | 2026-05-01 |
 | База данных и миграции | 2026-05-01 |
+| Аутентификация (JWT) | 2026-05-01 |
