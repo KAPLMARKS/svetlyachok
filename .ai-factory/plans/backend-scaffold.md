@@ -171,7 +171,7 @@ Rationale: Этот план реализует вторую веху роадм
 
 ### Phase 5: Тесты и верификация
 
-- [ ] **Task 9: Pytest configuration + базовые fixtures**
+- [x] **Task 9: Pytest configuration + базовые fixtures**
   - **Deliverable:**
     - `backend/tests/conftest.py` с fixtures:
       - `settings_overrides()` — позволяет переопределить настройки в тестах через `monkeypatch.setenv`
@@ -185,7 +185,7 @@ Rationale: Этот план реализует вторую веху роадм
     - Все тесты должны иметь возможность assertить лог-строки
   - **Acceptance:** `cd backend && pytest --collect-only` показывает все собранные тесты без ошибок импорта
 
-- [ ] **Task 10: Smoke-тесты на healthcheck endpoint и загрузку настроек**
+- [x] **Task 10: Smoke-тесты на healthcheck endpoint и загрузку настроек**
   - **Deliverable:**
     - `backend/tests/unit/core/test_config.py`:
       - test: загрузка `Settings` с минимальными переменными окружения проходит
