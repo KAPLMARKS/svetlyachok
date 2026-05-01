@@ -16,17 +16,33 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.application.employees.authenticate import LoginUseCase
+from app.application.employees.change_password import ChangePasswordUseCase
+from app.application.employees.create_employee import CreateEmployeeUseCase
+from app.application.employees.deactivate_employee import (
+    ActivateEmployeeUseCase,
+    DeactivateEmployeeUseCase,
+)
+from app.application.employees.list_employees import ListEmployeesUseCase
 from app.application.employees.refresh_tokens import RefreshTokensUseCase
+from app.application.employees.update_employee import UpdateEmployeeUseCase
+from app.application.zones.create_zone import CreateZoneUseCase
+from app.application.zones.delete_zone import DeleteZoneUseCase
+from app.application.zones.list_zones import GetZoneUseCase, ListZonesUseCase
+from app.application.zones.update_zone import UpdateZoneUseCase
 from app.core.config import Settings, get_settings
 from app.core.logging import get_logger
 from app.domain.employees.entities import Employee, Role
 from app.domain.employees.repositories import EmployeeRepository
 from app.domain.employees.services import PasswordHasher
 from app.domain.shared.exceptions import ForbiddenError, UnauthorizedError
+from app.domain.zones.repositories import ZoneRepository
 from app.infrastructure.auth import BcryptPasswordHasher, JwtProvider
 from app.infrastructure.db.session import get_session, get_sessionmaker
 from app.infrastructure.repositories.employees_repository import (
     SqlAlchemyEmployeeRepository,
+)
+from app.infrastructure.repositories.zones_repository import (
+    SqlAlchemyZoneRepository,
 )
 
 log = get_logger(__name__)
@@ -211,3 +227,87 @@ def require_role(*allowed_roles: Role) -> Callable[..., Employee]:
         return user
 
     return _checker
+
+
+# ---------------------------------------------------------------------------
+# CRUD employees use cases
+# ---------------------------------------------------------------------------
+
+
+def get_create_employee_use_case(
+    repo: EmployeeRepository = Depends(get_employee_repository),
+    hasher: PasswordHasher = Depends(get_password_hasher),
+) -> CreateEmployeeUseCase:
+    return CreateEmployeeUseCase(employee_repo=repo, password_hasher=hasher)
+
+
+def get_list_employees_use_case(
+    repo: EmployeeRepository = Depends(get_employee_repository),
+) -> ListEmployeesUseCase:
+    return ListEmployeesUseCase(employee_repo=repo)
+
+
+def get_update_employee_use_case(
+    repo: EmployeeRepository = Depends(get_employee_repository),
+) -> UpdateEmployeeUseCase:
+    return UpdateEmployeeUseCase(employee_repo=repo)
+
+
+def get_change_password_use_case(
+    repo: EmployeeRepository = Depends(get_employee_repository),
+    hasher: PasswordHasher = Depends(get_password_hasher),
+) -> ChangePasswordUseCase:
+    return ChangePasswordUseCase(employee_repo=repo, password_hasher=hasher)
+
+
+def get_deactivate_employee_use_case(
+    repo: EmployeeRepository = Depends(get_employee_repository),
+) -> DeactivateEmployeeUseCase:
+    return DeactivateEmployeeUseCase(employee_repo=repo)
+
+
+def get_activate_employee_use_case(
+    repo: EmployeeRepository = Depends(get_employee_repository),
+) -> ActivateEmployeeUseCase:
+    return ActivateEmployeeUseCase(employee_repo=repo)
+
+
+# ---------------------------------------------------------------------------
+# CRUD zones use cases
+# ---------------------------------------------------------------------------
+
+
+def get_zone_repository(
+    session: AsyncSession = Depends(get_session),
+) -> ZoneRepository:
+    return SqlAlchemyZoneRepository(session)
+
+
+def get_create_zone_use_case(
+    repo: ZoneRepository = Depends(get_zone_repository),
+) -> CreateZoneUseCase:
+    return CreateZoneUseCase(zone_repo=repo)
+
+
+def get_list_zones_use_case(
+    repo: ZoneRepository = Depends(get_zone_repository),
+) -> ListZonesUseCase:
+    return ListZonesUseCase(zone_repo=repo)
+
+
+def get_zone_use_case(
+    repo: ZoneRepository = Depends(get_zone_repository),
+) -> GetZoneUseCase:
+    return GetZoneUseCase(zone_repo=repo)
+
+
+def get_update_zone_use_case(
+    repo: ZoneRepository = Depends(get_zone_repository),
+) -> UpdateZoneUseCase:
+    return UpdateZoneUseCase(zone_repo=repo)
+
+
+def get_delete_zone_use_case(
+    repo: ZoneRepository = Depends(get_zone_repository),
+) -> DeleteZoneUseCase:
+    return DeleteZoneUseCase(zone_repo=repo)
