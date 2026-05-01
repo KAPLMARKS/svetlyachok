@@ -137,7 +137,7 @@ Rationale: Этот план реализует вторую веху роадм
 
 ### Phase 4: HTTP-слой и композиция приложения
 
-- [ ] **Task 7: Реализовать healthcheck endpoint `app/presentation/api/v1/health.py`**
+- [x] **Task 7: Реализовать healthcheck endpoint `app/presentation/api/v1/health.py`**
   - **Deliverable:**
     - Pydantic-схема `HealthResponse` с полями `status: Literal["ok", "degraded"]`, `version: str`, `environment: str`, `checks: dict[str, Literal["ok", "fail"]]`
     - Router `health_router = APIRouter(prefix="/health", tags=["health"])`
@@ -150,7 +150,7 @@ Rationale: Этот план реализует вторую веху роадм
     - При `status="degraded"` (для будущей расширяемости): WARN с указанием failed checks
   - **Acceptance:** `curl http://localhost:8000/api/v1/health` возвращает `{"status":"ok","version":"0.1.0","environment":"development","checks":{"app":"ok"}}` со статусом 200
 
-- [ ] **Task 8: Композиция FastAPI app в `app/main.py`**
+- [x] **Task 8: Композиция FastAPI app в `app/main.py`**
   - **Deliverable:**
     - Функция `create_app() -> FastAPI`:
       1. Загружает `Settings` через `get_settings()`
