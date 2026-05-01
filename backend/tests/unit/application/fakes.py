@@ -6,8 +6,10 @@
 from __future__ import annotations
 
 from dataclasses import replace
+from datetime import datetime
 
 from app.domain.employees.entities import Employee, Role
+from app.domain.radiomap.entities import Fingerprint
 from app.domain.shared.exceptions import ConflictError, NotFoundError
 from app.domain.zones.entities import Zone, ZoneType
 
@@ -181,3 +183,102 @@ class FakeZoneRepository:
             )
         del self._storage[zone_id]
         return True
+
+
+class FakeFingerprintRepository:
+    """In-memory FingerprintRepository.
+
+    Поддерживает все методы Protocol'а, включая фильтры и сортировку
+    по captured_at DESC. `list_calibrated_for_zone` использует
+    фильтр zone_id + is_calibration=True.
+    """
+
+    def __init__(self) -> None:
+        self._storage: dict[int, Fingerprint] = {}
+        self._next_id = 1
+
+    async def add(self, fingerprint: Fingerprint) -> Fingerprint:
+        new_id = self._next_id
+        self._next_id += 1
+        stored = replace(fingerprint, id=new_id)
+        self._storage[new_id] = stored
+        return stored
+
+    async def get_by_id(self, fingerprint_id: int) -> Fingerprint | None:
+        return self._storage.get(fingerprint_id)
+
+    async def list(
+        self,
+        *,
+        employee_id: int | None = None,
+        zone_id: int | None = None,
+        is_calibration: bool | None = None,
+        captured_from: datetime | None = None,
+        captured_to: datetime | None = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> list[Fingerprint]:
+        items = self._apply_filters(
+            list(self._storage.values()),
+            employee_id=employee_id,
+            zone_id=zone_id,
+            is_calibration=is_calibration,
+            captured_from=captured_from,
+            captured_to=captured_to,
+        )
+        items.sort(key=lambda fp: fp.captured_at, reverse=True)
+        return items[offset : offset + limit]
+
+    async def count(
+        self,
+        *,
+        employee_id: int | None = None,
+        zone_id: int | None = None,
+        is_calibration: bool | None = None,
+        captured_from: datetime | None = None,
+        captured_to: datetime | None = None,
+    ) -> int:
+        items = self._apply_filters(
+            list(self._storage.values()),
+            employee_id=employee_id,
+            zone_id=zone_id,
+            is_calibration=is_calibration,
+            captured_from=captured_from,
+            captured_to=captured_to,
+        )
+        return len(items)
+
+    async def delete_by_id(self, fingerprint_id: int) -> bool:
+        if fingerprint_id not in self._storage:
+            return False
+        del self._storage[fingerprint_id]
+        return True
+
+    async def list_calibrated_for_zone(self, zone_id: int) -> list[Fingerprint]:
+        return [
+            fp
+            for fp in self._storage.values()
+            if fp.zone_id == zone_id and fp.is_calibration
+        ]
+
+    @staticmethod
+    def _apply_filters(
+        items: list[Fingerprint],
+        *,
+        employee_id: int | None,
+        zone_id: int | None,
+        is_calibration: bool | None,
+        captured_from: datetime | None,
+        captured_to: datetime | None,
+    ) -> list[Fingerprint]:
+        if employee_id is not None:
+            items = [fp for fp in items if fp.employee_id == employee_id]
+        if zone_id is not None:
+            items = [fp for fp in items if fp.zone_id == zone_id]
+        if is_calibration is not None:
+            items = [fp for fp in items if fp.is_calibration == is_calibration]
+        if captured_from is not None:
+            items = [fp for fp in items if fp.captured_at >= captured_from]
+        if captured_to is not None:
+            items = [fp for fp in items if fp.captured_at <= captured_to]
+        return items
