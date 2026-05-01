@@ -31,6 +31,7 @@ from app.presentation.api.v1.employees import router as employees_router
 from app.presentation.api.v1.fingerprints import router as fingerprints_router
 from app.presentation.api.v1.health import router as health_router
 from app.presentation.api.v1.me import router as me_router
+from app.presentation.api.v1.positioning import router as positioning_router
 from app.presentation.api.v1.zones import router as zones_router
 from app.presentation.exception_handlers import register_exception_handlers
 from app.presentation.middleware.correlation_id import CorrelationIdMiddleware
@@ -96,6 +97,7 @@ def create_app() -> FastAPI:
     app.include_router(zones_router, prefix="/api/v1")
     app.include_router(fingerprints_router, prefix="/api/v1")
     app.include_router(calibration_router, prefix="/api/v1")
+    app.include_router(positioning_router, prefix="/api/v1")
 
     log.info(
         "[main.create_app] ready",
@@ -109,6 +111,7 @@ def create_app() -> FastAPI:
             "/api/v1/zones",
             "/api/v1/fingerprints",
             "/api/v1/calibration",
+            "/api/v1/positioning",
         ],
         middleware=[
             "CorrelationIdMiddleware",
