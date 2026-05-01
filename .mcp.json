@@ -17,6 +17,22 @@
     "playwright": {
       "command": "npx",
       "args": ["-y", "@playwright/mcp@latest"]
+    },
+    "handoff": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "tsx",
+        "C:\\Users\\shiga\\OneDrive\\Рабочий стол\\svetlyachok\\aif-handoff\\packages\\mcp\\src\\index.ts"
+      ],
+      "cwd": "C:\\Users\\shiga\\OneDrive\\Рабочий стол\\svetlyachok\\aif-handoff",
+      "env": {
+        "MCP_TRANSPORT": "stdio",
+        "DATABASE_URL": "C:\\Users\\shiga\\OneDrive\\Рабочий стол\\svetlyachok\\aif-handoff\\data\\aif.sqlite",
+        "PROJECTS_DIR": "C:\\Users\\shiga\\OneDrive\\Рабочий стол\\svetlyachok\\aif-handoff\\.projects",
+        "LOG_LEVEL": "info",
+        "LOG_DESTINATION": "stderr"
+      }
     }
   }
 }
