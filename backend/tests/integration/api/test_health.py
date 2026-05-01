@@ -7,7 +7,6 @@ from httpx import AsyncClient
 
 from app.presentation.middleware.correlation_id import CORRELATION_ID_HEADER
 
-
 pytestmark = pytest.mark.integration
 
 

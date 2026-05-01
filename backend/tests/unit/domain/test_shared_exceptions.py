@@ -13,7 +13,6 @@ from app.domain.shared.exceptions import (
     ValidationError,
 )
 
-
 pytestmark = pytest.mark.unit
 
 

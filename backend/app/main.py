@@ -92,7 +92,7 @@ def create_app() -> FastAPI:
 
 
 @asynccontextmanager
-async def _lifespan(_app: FastAPI):  # noqa: ANN202 - fastapi lifespan signature
+async def _lifespan(_app: FastAPI):
     """Lifespan-хук FastAPI — startup и shutdown.
 
     Сейчас — заглушка. На следующих вехах:

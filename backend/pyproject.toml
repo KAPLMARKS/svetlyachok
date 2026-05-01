@@ -79,10 +79,17 @@ select = [
 ignore = [
   "E501",  # line too long (формат — задача форматтера)
   "S101",  # assert (используется в тестах и для type narrowing)
+  # Кириллические символы в docstrings/строках/комментариях — намеренный выбор языка артефактов
+  "RUF001",  # ambiguous-unicode-character-string
+  "RUF002",  # ambiguous-unicode-character-docstring
+  "RUF003",  # ambiguous-unicode-character-comment
 ]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S101", "S105", "S106"]  # тесты могут использовать assert и моковые credentials
+# FastAPI идиома: `param: Type = Depends(...)` использует function call в default — это норма
+"app/presentation/api/**" = ["B008"]
+"app/presentation/exception_handlers.py" = ["B008"]
 
 [tool.ruff.format]
 quote-style = "double"
