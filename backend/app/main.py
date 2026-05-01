@@ -23,6 +23,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 from app.core.config import Settings, get_settings
 from app.core.logging import configure_logging, get_logger
+from app.infrastructure.db.session import dispose_engine, init_engine
 from app.presentation.api.v1.health import router as health_router
 from app.presentation.exception_handlers import register_exception_handlers
 from app.presentation.middleware.correlation_id import CorrelationIdMiddleware
@@ -95,14 +96,34 @@ def create_app() -> FastAPI:
 async def _lifespan(_app: FastAPI):
     """Lifespan-хук FastAPI — startup и shutdown.
 
-    Сейчас — заглушка. На следующих вехах:
-    - startup: open DB pool, load ML model, warm cache
-    - shutdown: close DB pool, save state
+    На startup — инициализирует пул соединений к БД (engine создаётся
+    lazy: реальное TCP-подключение установится при первом запросе).
+    На shutdown — корректно закрывает пул.
+
+    Engine создаётся даже если БД недоступна — это намеренно. Сервер
+    должен подняться, healthcheck покажет `database: fail`, а оператор
+    увидит проблему и поднимет БД. Иначе пришлось бы рестартовать
+    приложение каждый раз при сбое БД.
     """
     log = get_logger(__name__)
+    settings = get_settings()
+
+    log.info("[main.lifespan] startup begin")
+    try:
+        init_engine(settings)
+        log.info("[main.lifespan] db engine ready")
+    except Exception:
+        log.error("[main.lifespan] startup failed", exc_info=True)
+        raise
+
     log.info("[main.lifespan] startup complete")
-    yield
-    log.info("[main.lifespan] shutdown complete")
+    try:
+        yield
+    finally:
+        log.info("[main.lifespan] shutdown begin")
+        await dispose_engine()
+        log.info("[main.lifespan] db engine disposed")
+        log.info("[main.lifespan] shutdown complete")
 
 
 def _app_version() -> str:
