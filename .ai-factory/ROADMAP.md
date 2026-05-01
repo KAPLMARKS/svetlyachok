@@ -10,7 +10,7 @@
 - [x] **Аутентификация (JWT)** — login/refresh endpoints, bcrypt хеши паролей, защита роутов через FastAPI Depends, rate limiting на /auth
 - [x] **Управление сотрудниками и зонами** — CRUD employees, ролей, рабочих зон (рабочее место, коридор, переговорная, вне офиса) — backend API
 - [x] **Приём радиоотпечатков и калибровка** — endpoint POST `/api/v1/fingerprints` для приёма с устройства, endpoint POST `/api/v1/calibration/points` для эталонных точек admin-режима
-- [ ] **ML-классификаторы (WKNN + Random Forest)** — реализация `PositionClassifier` Protocol через scikit-learn (KNN с distance-weighting и Random Forest), извлечение признаков из RSSI-векторов, конфигурация гиперпараметров в `infrastructure/ml/config.py`
+- [x] **ML-классификаторы (WKNN + Random Forest)** — реализация `PositionClassifier` Protocol через scikit-learn (KNN с distance-weighting и Random Forest), извлечение признаков из RSSI-векторов, конфигурация гиперпараметров в `infrastructure/ml/config.py`
 - [ ] **Учёт рабочего времени и интеграция с 1С/ERP** — расчёт work_hours, опозданий, переработок; экспорт по REST API в формате, совместимом с 1С; OpenAPI-документация эндпоинтов
 - [ ] **Mobile-приложение (Flutter, Android-only)** — экраны auth и сканирования, фоновое Wi-Fi-сканирование через WorkManager (с учётом throttling Android 9+), режим администратора для калибровки, локальный кэш sqflite неотправленных отпечатков
 - [ ] **Web-панель администратора (React + Vite + TypeScript)** — экраны auth, визуализация радиокарты, управление зонами и сотрудниками, отчёты по посещаемости, графики опозданий
@@ -29,3 +29,4 @@
 | Аутентификация (JWT) | 2026-05-01 |
 | Управление сотрудниками и зонами | 2026-05-01 |
 | Приём радиоотпечатков и калибровка | 2026-05-01 |
+| ML-классификаторы (WKNN + Random Forest) | 2026-05-01 |

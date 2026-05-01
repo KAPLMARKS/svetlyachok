@@ -133,6 +133,7 @@ python scripts/seed.py
 | `POST` | `/api/v1/calibration/points` | Создать калибровочную точку (admin) |
 | `GET` | `/api/v1/calibration/points` | Список калибровочных точек (любой авторизованный) |
 | `DELETE` | `/api/v1/calibration/points/{id}` | Удалить калибровочную точку (admin); 400 если это live-отпечаток |
+| `POST` | `/api/v1/positioning/classify` | Классификация позиции по RSSI-вектору (любой авторизованный) |
 
 Полный OpenAPI: http://localhost:8000/docs (Swagger UI), http://localhost:8000/redoc.
 
@@ -385,6 +386,91 @@ curl -X DELETE http://localhost:8000/api/v1/calibration/points/${ID} \
 ### Список калибровочных точек
 
 `GET /api/v1/calibration/points` доступен любому авторизованному (mobile/web нужно для UI калибровки и визуализации radiomap'а). Опциональный фильтр `?zone_id=N`.
+
+## ML-классификация позиции
+
+Backend определяет, в какой зоне находится сотрудник, по присланному
+RSSI-вектору. На пилоте используется **WKNN** (Weighted K-Nearest
+Neighbors); реализация **Random Forest** доступна для baseline-сравнения
+в метрологических тестах диссертации (по ISO/IEC 18305:2016).
+
+### Минимальные требования
+
+Перед классификацией радиокарта должна быть откалибрована:
+
+- **Минимум 3 калибровочные точки в каждой зоне** (`MIN_CALIBRATION_POINTS_PER_ZONE`)
+- Каждая точка должна содержать **хотя бы один BSSID** (физически — точка доступа в зоне видимости)
+- Зоны должны иметь различающиеся RSSI-«отпечатки», иначе они не разделимы
+
+Если калибровка отсутствует или недостаточна — `/api/v1/positioning/classify` возвращает `503` с конкретным `code` (`empty_calibration_set`, `insufficient_calibration_points`, `missing_zone_types`).
+
+### Запрос классификации
+
+```bash
+curl -X POST http://localhost:8000/api/v1/positioning/classify \
+  -H "Authorization: Bearer ${ACCESS}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "rssi_vector": {
+      "AA:BB:CC:DD:EE:01": -45,
+      "AA:BB:CC:DD:EE:02": -67
+    }
+  }'
+```
+
+Ответ:
+
+```json
+{
+  "zone_id": 42,
+  "zone_type": "workplace",
+  "confidence": 0.87,
+  "classifier_name": "wknn"
+}
+```
+
+### Конфигурация
+
+Гиперпараметры классификаторов хранятся в `app/infrastructure/ml/config.py` и
+**версионируются в git** для воспроизводимости экспериментов:
+
+- **WKNN**: `n_neighbors=3`, `weights="distance"`, `metric="euclidean"`
+- **Random Forest**: `n_estimators=100`, `class_weight="balanced"`, `random_state=42`
+- `MISSING_RSSI = -100` dBm — заполнитель для отсутствующих BSSID (noise floor)
+
+Изменение этих значений инвалидирует все ранее обученные модели и
+эталонные метрики `tests/ml/`. После апгрейда нужен rerun метрологических
+тестов и фиксация новых эталонов.
+
+### Метрики (ISO/IEC 18305:2016)
+
+- **Detection Probability (DP)** — основная метрика зонной классификации;
+  доля правильных предсказаний на test set'е (overall и per-zone)
+- **Confusion matrix** — обязательная визуализация в дипломе;
+  `format_confusion_matrix(metrics)` форматирует её как ASCII-таблицу для логов
+
+Запуск метрологических тестов:
+
+```bash
+pytest -m ml -v -s
+```
+
+На синтетическом dataset (4 зоны × 10 калибровочных + 4 × 5 тестовых)
+оба классификатора достигают **DP = 1.0** (см. `tests/ml/test_*_metrics.py`).
+На реальных полевых данных значения будут ниже, но порог `0.7` —
+жёсткая нижняя граница для регрессионных тестов.
+
+### Поведение lazy-обучения
+
+При первом запросе `/classify` классификатор **lazy-обучается** на
+текущей калибровочной выборке через `FingerprintRepository.list_calibrated_all()`.
+Модель кешируется в singleton (`functools.lru_cache`) — последующие
+запросы используют ту же обученную модель без переобучения.
+
+⚠️ Сейчас при добавлении/удалении калибровочной точки модель **не
+инвалидируется автоматически**. Чтобы применить новую калибровку —
+рестарт backend'а. Для production добавим explicit invalidate-flag
+или event-driven retrain (см. open questions в плане вехи).
 
 ## Архитектура
 
