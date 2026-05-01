@@ -25,6 +25,7 @@ from starlette.middleware.cors import CORSMiddleware
 from app.core.config import Settings, get_settings
 from app.core.logging import configure_logging, get_logger
 from app.infrastructure.db.session import dispose_engine, init_engine
+from app.presentation.api.v1.attendance import router as attendance_router
 from app.presentation.api.v1.auth import router as auth_router
 from app.presentation.api.v1.calibration import router as calibration_router
 from app.presentation.api.v1.employees import router as employees_router
@@ -98,6 +99,7 @@ def create_app() -> FastAPI:
     app.include_router(fingerprints_router, prefix="/api/v1")
     app.include_router(calibration_router, prefix="/api/v1")
     app.include_router(positioning_router, prefix="/api/v1")
+    app.include_router(attendance_router, prefix="/api/v1")
 
     log.info(
         "[main.create_app] ready",
@@ -112,6 +114,7 @@ def create_app() -> FastAPI:
             "/api/v1/fingerprints",
             "/api/v1/calibration",
             "/api/v1/positioning",
+            "/api/v1/attendance",
         ],
         middleware=[
             "CorrelationIdMiddleware",

@@ -139,7 +139,7 @@
 
 ### Phase 5: Presentation
 
-- [ ] **Task 10: Pydantic-схемы**
+- [x] **Task 10: Pydantic-схемы**
   - **Файлы:** `backend/app/presentation/schemas/attendance.py`
   - **Что:**
     - `AttendanceLogResponse(BaseModel, extra=forbid)`: `id`, `employee_id`, `zone_id`, `started_at`, `ended_at`, `last_seen_at`, `duration_seconds`, `status: str` (enum value).
@@ -147,7 +147,7 @@
     - `AttendanceSummaryResponse(BaseModel, extra=forbid)`: соответствует доменному `AttendanceSummary`.
   - **Логи:** не требуются.
 
-- [ ] **Task 11: Router и dependency wiring**
+- [x] **Task 11: Router и dependency wiring**
   - **Файлы:** `backend/app/presentation/api/v1/attendance.py`, `backend/app/presentation/dependencies.py`, `backend/app/main.py`
   - **Что:**
     - В `dependencies.py`: добавить `get_attendance_repository`, `get_record_attendance_use_case`, `get_list_attendance_use_case`, `get_compute_attendance_summary_use_case`. Inactivity timeout из `Settings.attendance_inactivity_timeout_seconds` (новое поле в `app/core/config.py`, default 1800).
@@ -157,7 +157,7 @@
     - В `main.py`: подключить `attendance.router` через `app.include_router`.
   - **Логи:** `log.info("[api.attendance.list] start", filters)` / `done`. То же для summary.
 
-- [ ] **Task 12: Интеграция с classify-эндпоинтом**
+- [x] **Task 12: Интеграция с classify-эндпоинтом**
   - **Файлы:** `backend/app/presentation/api/v1/positioning.py`, `backend/app/presentation/dependencies.py`
   - **Что:** В функции `classify_location` после успешного `use_case.execute(cmd)` вызвать `record_attendance_use_case.execute(RecordAttendanceCommand(employee_id=current_user.id, zone_id=result.zone_id, zone_type=result.zone_type, now=datetime.now(tz=UTC)))`. `RecordAttendanceUseCase` инжектится через `Depends(get_record_attendance_use_case)`. Если `record_attendance` поднимает исключение — оно НЕ должно ломать ответ classify (логировать `log.warning("[positioning.classify.attendance_record_failed] ...", exc_info=exc)`). Возвращаемый `ClassifyResponse` остаётся прежним (без изменения схемы).
   - **Логи:** `log.info("[positioning.classify.attendance_recorded] ...", session_id, status)` после успешной записи.
