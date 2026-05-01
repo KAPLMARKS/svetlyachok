@@ -261,6 +261,13 @@ class FakeFingerprintRepository:
             if fp.zone_id == zone_id and fp.is_calibration
         ]
 
+    async def list_calibrated_all(self) -> list[Fingerprint]:
+        return [
+            fp
+            for fp in self._storage.values()
+            if fp.is_calibration and fp.zone_id is not None
+        ]
+
     @staticmethod
     def _apply_filters(
         items: list[Fingerprint],

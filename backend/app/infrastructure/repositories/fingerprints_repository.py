@@ -176,6 +176,22 @@ class SqlAlchemyFingerprintRepository(FingerprintRepository):
         )
         return result
 
+    async def list_calibrated_all(self) -> list[Fingerprint]:
+        """Все калибровочные отпечатки во всех зонах (для ML)."""
+        log.debug("[fingerprints.repo.list_calibrated_all] start")
+        stmt = (
+            select(FingerprintORM)
+            .where(FingerprintORM.is_calibration.is_(True))
+            .where(FingerprintORM.zone_id.is_not(None))
+            .order_by(FingerprintORM.captured_at.asc())
+        )
+        rows = (await self._session.execute(stmt)).scalars().all()
+        result = [self._to_domain(orm) for orm in rows]
+        log.debug(
+            "[fingerprints.repo.list_calibrated_all] done", returned=len(result)
+        )
+        return result
+
     @staticmethod
     def _apply_filters(
         stmt,
