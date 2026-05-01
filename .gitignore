@@ -1,0 +1,118 @@
+# Переменные окружения и секреты
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# Python (backend/)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+.hypothesis/
+.mypy_cache/
+.ruff_cache/
+
+# Node / Web (web/, mobile/)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+.next/
+.turbo/
+out/
+
+# Flutter / Dart (mobile/)
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+*.iml
+*.ipr
+*.iws
+.idea/
+ios/Pods/
+ios/Runner.xcworkspace/xcuserdata/
+android/.gradle/
+android/local.properties
+android/captures/
+android/app/release/
+android/app/debug/
+
+# IDE
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Логи
+*.log
+logs/
+
+# Базы данных (локальные)
+*.db
+*.sqlite
+*.sqlite3
+
+# Docker
+.docker/
+
+# Калибровочные данные радиокарты (большие, версионируются отдельно)
+data/raw/
+data/intermediate/
+!data/.gitkeep
+
+# Тестовые артефакты ML
+ml-artifacts/
+mlruns/
+
+# Временные файлы Claude / агентов
+.claude/local/
+.aif-tmp/
+.handoff/
+
+# Build outputs
+*.apk
+*.aab
+*.ipa
