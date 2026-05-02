@@ -110,6 +110,36 @@ mobile/lib/
 Подробнее — в `.ai-factory/plans/mobile-prilozhenie-flutter-android.md`
 и `.ai-factory/ARCHITECTURE.md`.
 
+### DI map (Riverpod-провайдеры)
+
+| Provider | Файл | Зависит от |
+|----------|------|------------|
+| `sharedPreferencesProvider` | `features/auth/providers.dart` | — (Future) |
+| `prefsProvider` | `features/auth/providers.dart` | `sharedPreferencesProvider` |
+| `secureStorageProvider` | `features/auth/providers.dart` | — |
+| `dioProvider` | `features/auth/providers.dart` | `prefsProvider`, `secureStorageProvider` |
+| `authRepositoryProvider` | `features/auth/providers.dart` | `dioProvider`, `prefsProvider`, `secureStorageProvider` |
+| `currentUserProvider` | `features/auth/providers.dart` | `authRepositoryProvider`, `dioProvider` (AsyncNotifier) |
+| `loginViewModelProvider` | `features/auth/view_models/login_view_model.dart` | `authRepositoryProvider`, `currentUserProvider` |
+| `wifiScanServiceProvider` | `features/scanning/providers.dart` | — |
+| `appDatabaseProvider` | `features/scanning/providers.dart` | — |
+| `fingerprintCacheDaoProvider` | `features/scanning/providers.dart` | `appDatabaseProvider` |
+| `connectivityCheckerProvider` | `features/scanning/providers.dart` | — |
+| `fingerprintRepositoryProvider` | `features/scanning/providers.dart` | wifi/dao/dio/prefs/connectivity |
+| `pendingFingerprintsCountProvider` | `features/scanning/providers.dart` | `fingerprintRepositoryProvider` |
+| `scanningViewModelProvider` | `features/scanning/view_models/scanning_view_model.dart` | `fingerprintRepositoryProvider` |
+| `syncStatusViewModelProvider` | `features/scanning/view_models/sync_status_view_model.dart` | `fingerprintRepositoryProvider` |
+| `backgroundSchedulerProvider` | `features/scanning/providers.dart` | — |
+| `backgroundLifecycleBindingProvider` | `features/scanning/providers.dart` | `currentUserProvider`, `backgroundSchedulerProvider` |
+| `zoneRepositoryProvider` | `features/calibration/providers.dart` | `dioProvider` |
+| `zonesProvider` | `features/calibration/providers.dart` | `zoneRepositoryProvider` (FutureProvider) |
+| `calibrationRepositoryProvider` | `features/calibration/providers.dart` | wifi/dio/prefs |
+| `calibrationCaptureProvider` | `features/calibration/view_models/calibration_view_model.dart` | `calibrationRepositoryProvider` (Family по zoneId) |
+| `appRouterProvider` | `app/router.dart` | `currentUserProvider` (refreshListenable) |
+
+Корневой `SvetlyachokApp` дополнительно `ref.watch(backgroundLifecycleBindingProvider)`,
+чтобы автозапустить scheduler-binding после успешного login.
+
 ## Permissions
 
 Запрашивает у пользователя:
