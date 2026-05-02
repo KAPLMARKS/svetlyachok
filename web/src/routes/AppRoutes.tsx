@@ -2,6 +2,7 @@ import { Route, Routes } from "react-router-dom";
 
 import { LoginPage } from "@/features/auth/LoginPage";
 import { EmployeesListPage } from "@/features/employees/EmployeesListPage";
+import { RadiomapPage } from "@/features/radiomap/RadiomapPage";
 import { ZonesListPage } from "@/features/zones/ZonesListPage";
 import { AppShell } from "@/layout/AppShell";
 
@@ -39,7 +40,7 @@ export const AppRoutes = (): JSX.Element => {
             />
             <Route path={ROUTES.employees} element={<EmployeesListPage />} />
             <Route path={ROUTES.zones} element={<ZonesListPage />} />
-            <Route path={ROUTES.radiomap} element={<Placeholder title="Радиокарта" />} />
+            <Route path={ROUTES.radiomap} element={<RadiomapPage />} />
           </Route>
         </Route>
       </Route>
