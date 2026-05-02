@@ -123,7 +123,7 @@ void main() {
     });
 
     test('returns true on successful login + sets currentUser', () async {
-      final user = const User(
+      const user = User(
         id: 42,
         email: 'admin@svetlyachok.local',
         fullName: 'Админ',
@@ -131,7 +131,7 @@ void main() {
         isActive: true,
       );
       final fake = _FakeAuthRepository(
-        meResult: Right(user),
+        meResult: const Right(user),
       );
       final container = ProviderContainer(
         overrides: <Override>[
