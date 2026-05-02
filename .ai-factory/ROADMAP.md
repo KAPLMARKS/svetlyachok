@@ -12,7 +12,7 @@
 - [x] **Приём радиоотпечатков и калибровка** — endpoint POST `/api/v1/fingerprints` для приёма с устройства, endpoint POST `/api/v1/calibration/points` для эталонных точек admin-режима
 - [x] **ML-классификаторы (WKNN + Random Forest)** — реализация `PositionClassifier` Protocol через scikit-learn (KNN с distance-weighting и Random Forest), извлечение признаков из RSSI-векторов, конфигурация гиперпараметров в `infrastructure/ml/config.py`
 - [x] **Учёт рабочего времени** — AttendanceLog автоматически создаётся при `POST /api/v1/positioning/classify`; use case `RecordAttendanceUseCase` открывает/закрывает сессии по смене зоны и таймауту неактивности; расчёт `work_hours`, опозданий и переработок относительно `Employee.schedule_start/end`; REST API `GET /api/v1/attendance` с фильтрами (employee_id, from, to) и агрегацией по периоду. **Без интеграции с 1С/ERP — простой REST API.**
-- [ ] **Backend MVP-доработки** — критичные для рабочего продукта задачи, без которых mobile/web не заработают:
+- [x] **Backend MVP-доработки** — критичные для рабочего продукта задачи, без которых mobile/web не заработают:
   - **ML cache invalidation**: после CRUD калибровочных точек singleton-классификатор должен переобучиться без рестарта backend (иначе после `/calibration/points` admin не увидит изменений на mobile до перезапуска)
   - **Bulk fingerprints**: `POST /api/v1/fingerprints/batch` для отправки накопленного офлайн-кэша с mobile (нужно для sqflite-кэша + WorkManager: телефон не всегда онлайн, копит отпечатки и выгружает пачкой)
   - **Logout endpoint**: `POST /api/v1/auth/logout` (минимальная реализация — клиент стирает токены; blacklist jti — отложен) для кнопки «Выйти» в web-панели
