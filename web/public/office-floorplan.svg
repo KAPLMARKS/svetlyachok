@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid meet">
+  <rect width="1200" height="800" fill="#f0f3f7" />
+  <rect x="40" y="40" width="1120" height="720" fill="none" stroke="#cbd5e0" stroke-width="2" />
+
+  <!-- Workplace 1 -->
+  <rect x="80" y="80" width="380" height="280" fill="#ffffff" stroke="#1e88e5" stroke-width="1.5" stroke-dasharray="4 4" />
+  <text x="270" y="220" text-anchor="middle" font-family="system-ui" font-size="20" fill="#4a5568">Рабочее место 1</text>
+
+  <!-- Workplace 2 -->
+  <rect x="500" y="80" width="380" height="280" fill="#ffffff" stroke="#1e88e5" stroke-width="1.5" stroke-dasharray="4 4" />
+  <text x="690" y="220" text-anchor="middle" font-family="system-ui" font-size="20" fill="#4a5568">Рабочее место 2</text>
+
+  <!-- Meeting room -->
+  <rect x="920" y="80" width="240" height="280" fill="#ffffff" stroke="#38a169" stroke-width="1.5" stroke-dasharray="4 4" />
+  <text x="1040" y="220" text-anchor="middle" font-family="system-ui" font-size="18" fill="#4a5568">Переговорная</text>
+
+  <!-- Corridor -->
+  <rect x="80" y="400" width="1080" height="160" fill="#ffffff" stroke="#718096" stroke-width="1.5" stroke-dasharray="4 4" />
+  <text x="620" y="490" text-anchor="middle" font-family="system-ui" font-size="20" fill="#4a5568">Коридор</text>
+
+  <!-- Outside zone -->
+  <rect x="80" y="600" width="1080" height="160" fill="#ffffff" stroke="#c53030" stroke-width="1.5" stroke-dasharray="4 4" />
+  <text x="620" y="690" text-anchor="middle" font-family="system-ui" font-size="20" fill="#4a5568">Вне офиса</text>
+</svg>
