@@ -18,9 +18,12 @@ import 'package:go_router/go_router.dart';
 
 import '../core/logging.dart';
 import '../domain/models/user.dart';
+import '../domain/models/zone.dart';
 import '../features/auth/providers.dart';
 import '../features/auth/views/login_screen.dart';
 import '../features/auth/views/splash_screen.dart';
+import '../features/calibration/views/calibration_home_screen.dart';
+import '../features/calibration/views/capture_calibration_screen.dart';
 import '../features/scanning/views/scan_home_screen.dart';
 import '../features/settings/views/settings_screen.dart';
 
@@ -117,10 +120,21 @@ GoRouter buildRouter(Ref ref) {
       GoRoute(
         path: AppRoutes.adminCalibration,
         builder: (BuildContext context, GoRouterState state) =>
-            const _PlaceholderScreen(
-          title: 'Калибровка зон',
-          subtitle: 'Phase 5 — admin',
-        ),
+            const CalibrationHomeScreen(),
+        routes: <RouteBase>[
+          GoRoute(
+            path: ':zoneId',
+            builder: (BuildContext context, GoRouterState state) {
+              final zone = state.extra is Zone ? state.extra! as Zone : null;
+              if (zone == null) {
+                return const Scaffold(
+                  body: Center(child: Text('Зона не выбрана')),
+                );
+              }
+              return CaptureCalibrationScreen(zone: zone);
+            },
+          ),
+        ],
       ),
       GoRoute(
         path: AppRoutes.settings,
@@ -129,30 +143,6 @@ GoRouter buildRouter(Ref ref) {
       ),
     ],
   );
-}
-
-class _PlaceholderScreen extends StatelessWidget {
-  const _PlaceholderScreen({required this.title, required this.subtitle});
-
-  final String title;
-  final String subtitle;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Icon(Icons.construction_outlined, size: 64),
-            const SizedBox(height: 16),
-            Text(subtitle, style: Theme.of(context).textTheme.bodyMedium),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 /// Провайдер самого роутера — зависит от `currentUserProvider` через `buildRouter`.
