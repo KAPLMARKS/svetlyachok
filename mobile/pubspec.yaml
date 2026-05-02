@@ -1,0 +1,72 @@
+name: svetlyachok_mobile
+description: "АИС Светлячок — мобильное Android-приложение учёта посещаемости (Wi-Fi RSSI fingerprinting)."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.4.0 <4.0.0'
+  flutter: '>=3.24.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  # State management и DI
+  flutter_riverpod: ^2.5.0
+  riverpod_annotation: ^2.3.0
+
+  # Immutable models / JSON
+  freezed_annotation: ^2.4.0
+  json_annotation: ^4.9.0
+
+  # Network
+  dio: ^5.7.0
+  dio_smart_retry: ^7.0.0
+
+  # Storage
+  flutter_secure_storage: ^9.2.0
+  shared_preferences: ^2.3.0
+  sqflite: ^2.3.0
+  path_provider: ^2.1.0
+  path: ^1.9.0
+
+  # Wi-Fi сканирование и фоновые задачи
+  wifi_scan: ^0.4.1
+  workmanager: ^0.5.2
+  permission_handler: ^11.3.0
+  connectivity_plus: ^6.0.0
+
+  # Навигация
+  go_router: ^14.0.0
+
+  # Логи, error-pattern, утилиты
+  logger: ^2.4.0
+  dartz: ^0.10.1
+  uuid: ^4.4.0
+  intl: ^0.20.2
+  synchronized: ^3.3.0
+  package_info_plus: ^8.0.0
+  equatable: ^2.0.5
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
+
+  mockito: ^5.4.0
+  build_runner: ^2.4.0
+  freezed: ^2.5.0
+  json_serializable: ^6.8.0
+  riverpod_generator: ^2.4.0
+  riverpod_lint: ^2.3.0
+  custom_lint: ^0.6.0
+  lints: ^4.0.0
+  sqflite_common_ffi: ^2.3.0
+
+flutter:
+  uses-material-design: true
