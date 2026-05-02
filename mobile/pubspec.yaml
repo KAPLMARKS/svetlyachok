@@ -36,7 +36,10 @@ dependencies:
 
   # Wi-Fi сканирование и фоновые задачи
   wifi_scan: ^0.4.1
-  workmanager: ^0.5.2
+  # 0.5.x использует устаревшее Flutter v1 embedding API
+  # (ShimPluginRegistry/PluginRegistrantCallback), которое выпилено из
+  # современного Flutter SDK. 0.9.x — первая линия с v2 embedding.
+  workmanager: ^0.9.0
   permission_handler: ^11.3.0
   connectivity_plus: ^6.0.0
 

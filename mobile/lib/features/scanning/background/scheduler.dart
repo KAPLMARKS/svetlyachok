@@ -34,18 +34,17 @@ class WorkmanagerScheduler implements BackgroundScheduler {
       kBgTaskScanAndCache,
       frequency: kBackgroundTaskInterval,
       constraints: Constraints(
-        // ignore: constant_identifier_names
-        networkType: NetworkType.not_required,
+        networkType: NetworkType.notRequired,
         requiresBatteryNotLow: true,
       ),
-      existingWorkPolicy: ExistingWorkPolicy.keep,
+      existingWorkPolicy: ExistingPeriodicWorkPolicy.keep,
     );
     await _wm.registerPeriodicTask(
       kBgUniqueSyncPeriodic,
       kBgTaskSyncFingerprints,
       frequency: kBackgroundTaskInterval,
       constraints: Constraints(networkType: NetworkType.connected),
-      existingWorkPolicy: ExistingWorkPolicy.keep,
+      existingWorkPolicy: ExistingPeriodicWorkPolicy.keep,
     );
     AppLogger.instance.i(
       '[bg.scheduler] registered: scanAndCache + syncFingerprints, '
