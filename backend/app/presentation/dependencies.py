@@ -46,6 +46,9 @@ from app.application.radiomap.list_fingerprints import (
     ListFingerprintsUseCase,
 )
 from app.application.radiomap.submit_fingerprint import SubmitFingerprintUseCase
+from app.application.radiomap.submit_fingerprints_batch import (
+    SubmitFingerprintsBatchUseCase,
+)
 from app.application.zones.create_zone import CreateZoneUseCase
 from app.application.zones.delete_zone import DeleteZoneUseCase
 from app.application.zones.list_zones import GetZoneUseCase, ListZonesUseCase
@@ -359,6 +362,18 @@ def get_submit_fingerprint_use_case(
     repo: FingerprintRepository = Depends(get_fingerprint_repository),
 ) -> SubmitFingerprintUseCase:
     return SubmitFingerprintUseCase(fingerprint_repo=repo)
+
+
+def get_submit_fingerprints_batch_use_case(
+    submit: SubmitFingerprintUseCase = Depends(get_submit_fingerprint_use_case),
+) -> SubmitFingerprintsBatchUseCase:
+    """Bulk-приём отпечатков через композицию single-item use case.
+
+    Партионирование (transactional границы) идёт через FastAPI
+    `get_session` — все items батча выполняются в одной транзакции;
+    финальный commit/rollback делает `get_session` на выходе.
+    """
+    return SubmitFingerprintsBatchUseCase(submit_use_case=submit)
 
 
 def get_create_calibration_point_use_case(
