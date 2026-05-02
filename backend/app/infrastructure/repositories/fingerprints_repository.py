@@ -7,9 +7,13 @@
 
 from __future__ import annotations
 
+# Алиас на встроенный list — внутри класса есть метод `list`, который
+# затеняет имя при mypy-резолвинге forward-references аннотаций.
+from builtins import list as List
 from datetime import datetime
+from typing import Any
 
-from sqlalchemy import func, select
+from sqlalchemy import Select, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -153,7 +157,7 @@ class SqlAlchemyFingerprintRepository(FingerprintRepository):
         log.info("[fingerprints.repo.delete_by_id] done", fingerprint_id=fingerprint_id)
         return True
 
-    async def list_calibrated_for_zone(self, zone_id: int) -> list[Fingerprint]:
+    async def list_calibrated_for_zone(self, zone_id: int) -> List[Fingerprint]:
         """Все калибровочные отпечатки конкретной зоны (для ML).
 
         Использует partial-индекс `ix_fingerprints_zone_calibration` —
@@ -176,7 +180,7 @@ class SqlAlchemyFingerprintRepository(FingerprintRepository):
         )
         return result
 
-    async def list_calibrated_all(self) -> list[Fingerprint]:
+    async def list_calibrated_all(self) -> List[Fingerprint]:
         """Все калибровочные отпечатки во всех зонах (для ML)."""
         log.debug("[fingerprints.repo.list_calibrated_all] start")
         stmt = (
@@ -194,14 +198,14 @@ class SqlAlchemyFingerprintRepository(FingerprintRepository):
 
     @staticmethod
     def _apply_filters(
-        stmt,
+        stmt: Select[Any],
         *,
         employee_id: int | None,
         zone_id: int | None,
         is_calibration: bool | None,
         captured_from: datetime | None,
         captured_to: datetime | None,
-    ):
+    ) -> Select[Any]:
         if employee_id is not None:
             stmt = stmt.where(FingerprintORM.employee_id == employee_id)
         if zone_id is not None:

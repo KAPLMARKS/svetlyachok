@@ -8,8 +8,9 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Any
 
-from sqlalchemy import func, select
+from sqlalchemy import Select, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
@@ -186,14 +187,14 @@ class SqlAlchemyAttendanceRepository(AttendanceRepository):
 
     @staticmethod
     def _apply_filters(
-        stmt,
+        stmt: Select[Any],
         *,
         employee_id: int | None,
         zone_id: int | None,
         status: AttendanceStatus | None,
         started_from: datetime | None,
         started_to: datetime | None,
-    ):
+    ) -> Select[Any]:
         if employee_id is not None:
             stmt = stmt.where(AttendanceLogORM.employee_id == employee_id)
         if zone_id is not None:

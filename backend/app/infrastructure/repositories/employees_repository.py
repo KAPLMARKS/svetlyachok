@@ -7,7 +7,9 @@
 
 from __future__ import annotations
 
-from sqlalchemy import func, select
+from typing import Any
+
+from sqlalchemy import Select, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -157,7 +159,9 @@ class SqlAlchemyEmployeeRepository(EmployeeRepository):
         return result
 
     @staticmethod
-    def _apply_filters(stmt, *, role: Role | None, is_active: bool | None):
+    def _apply_filters(
+        stmt: Select[Any], *, role: Role | None, is_active: bool | None
+    ) -> Select[Any]:
         if role is not None:
             stmt = stmt.where(EmployeeORM.role == OrmRole(role.value))
         if is_active is not None:

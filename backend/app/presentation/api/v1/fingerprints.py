@@ -24,6 +24,10 @@ from app.application.radiomap.submit_fingerprint import (
     SubmitFingerprintCommand,
     SubmitFingerprintUseCase,
 )
+from app.application.radiomap.submit_fingerprints_batch import (
+    SubmitFingerprintsBatchCommand,
+    SubmitFingerprintsBatchUseCase,
+)
 from app.core.logging import get_logger
 from app.domain.employees.entities import Employee, Role
 from app.domain.radiomap.entities import Fingerprint
@@ -33,9 +37,14 @@ from app.presentation.dependencies import (
     get_fingerprint_use_case,
     get_list_fingerprints_use_case,
     get_submit_fingerprint_use_case,
+    get_submit_fingerprints_batch_use_case,
     require_role,
 )
 from app.presentation.schemas.radiomap import (
+    BulkAcceptedItem,
+    BulkRejectedItem,
+    FingerprintBulkSubmitRequest,
+    FingerprintBulkSubmitResponse,
     FingerprintResponse,
     FingerprintsPageResponse,
     FingerprintSubmitRequest,
@@ -85,6 +94,62 @@ async def submit_fingerprint(
     )
     result = await use_case.execute(cmd)
     return _to_response(result)
+
+
+@router.post(
+    "/batch",
+    response_model=FingerprintBulkSubmitResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Bulk-приём live-отпечатков (auth)",
+)
+async def submit_fingerprints_batch(
+    payload: FingerprintBulkSubmitRequest,
+    current_user: Employee = Depends(get_current_user),
+    use_case: SubmitFingerprintsBatchUseCase = Depends(
+        get_submit_fingerprints_batch_use_case
+    ),
+) -> FingerprintBulkSubmitResponse:
+    log.debug(
+        "[fingerprints.endpoint.batch] start",
+        employee_id=current_user.id,
+        items_count=len(payload.items),
+    )
+
+    commands = [
+        SubmitFingerprintCommand(
+            employee_id=current_user.id,
+            captured_at=item.captured_at,
+            device_id=item.device_id,
+            rssi_vector=RSSIVector(item.rssi_vector),
+            sample_count=item.sample_count,
+        )
+        for item in payload.items
+    ]
+    result = await use_case.execute(
+        SubmitFingerprintsBatchCommand(
+            employee_id=current_user.id,
+            items=commands,
+        )
+    )
+
+    log.info(
+        "[fingerprints.endpoint.batch] done",
+        employee_id=current_user.id,
+        accepted_count=len(result.accepted),
+        rejected_count=len(result.rejected),
+    )
+    return FingerprintBulkSubmitResponse(
+        accepted=[
+            BulkAcceptedItem(index=a.index, fingerprint=_to_response(a.fingerprint))
+            for a in result.accepted
+        ],
+        rejected=[
+            BulkRejectedItem(index=r.index, code=r.code, message=r.message)
+            for r in result.rejected
+        ],
+        accepted_count=len(result.accepted),
+        rejected_count=len(result.rejected),
+    )
 
 
 @router.get(

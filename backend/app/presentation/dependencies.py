@@ -8,7 +8,7 @@ Composition root: связывает Protocol'ы из domain/application с
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from datetime import timedelta
 from functools import lru_cache
 
@@ -46,6 +46,9 @@ from app.application.radiomap.list_fingerprints import (
     ListFingerprintsUseCase,
 )
 from app.application.radiomap.submit_fingerprint import SubmitFingerprintUseCase
+from app.application.radiomap.submit_fingerprints_batch import (
+    SubmitFingerprintsBatchUseCase,
+)
 from app.application.zones.create_zone import CreateZoneUseCase
 from app.application.zones.delete_zone import DeleteZoneUseCase
 from app.application.zones.list_zones import GetZoneUseCase, ListZonesUseCase
@@ -223,7 +226,7 @@ async def get_current_user(
     return employee
 
 
-def require_role(*allowed_roles: Role) -> Callable[..., Employee]:
+def require_role(*allowed_roles: Role) -> Callable[..., Awaitable[Employee]]:
     """Фабрика dependency для role-based авторизации.
 
     Использование:
@@ -361,6 +364,18 @@ def get_submit_fingerprint_use_case(
     return SubmitFingerprintUseCase(fingerprint_repo=repo)
 
 
+def get_submit_fingerprints_batch_use_case(
+    submit: SubmitFingerprintUseCase = Depends(get_submit_fingerprint_use_case),
+) -> SubmitFingerprintsBatchUseCase:
+    """Bulk-приём отпечатков через композицию single-item use case.
+
+    Партионирование (transactional границы) идёт через FastAPI
+    `get_session` — все items батча выполняются в одной транзакции;
+    финальный commit/rollback делает `get_session` на выходе.
+    """
+    return SubmitFingerprintsBatchUseCase(submit_use_case=submit)
+
+
 def get_create_calibration_point_use_case(
     fingerprint_repo: FingerprintRepository = Depends(get_fingerprint_repository),
     zone_repo: ZoneRepository = Depends(get_zone_repository),
@@ -417,6 +432,23 @@ def _position_classifier_singleton() -> WknnClassifier:
 def get_position_classifier() -> PositionClassifier:
     """FastAPI dependency: singleton WKNN-классификатор."""
     return _position_classifier_singleton()
+
+
+def invalidate_position_classifier_cache() -> None:
+    """Сбрасывает singleton WKNN-классификатора.
+
+    Вызывается после CRUD на `/api/v1/calibration/points` (admin-only).
+    После сброса следующий `/classify` создаст новый `WknnClassifier`
+    instance через `_position_classifier_singleton()` и lazy-обучит его
+    на актуальной калибровочной выборке (см. `ClassifyLocationUseCase`).
+
+    Альтернатива — добавить `reset()` метод на `WknnClassifier` и
+    вызывать его, но переключение singleton'а гарантирует чистое
+    состояние без риска утечки старого `_clf`/`_bssid_index`.
+    Минимальное изменение — `cache_clear` на lru_cache-обёртке.
+    """
+    log.info("[dependencies.invalidate_position_classifier_cache] cleared")
+    _position_classifier_singleton.cache_clear()
 
 
 def get_classify_location_use_case(

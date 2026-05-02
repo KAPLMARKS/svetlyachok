@@ -20,7 +20,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime, time, timedelta
 
 from app.core.logging import get_logger
 from app.domain.attendance.entities import AttendanceLog
@@ -156,7 +156,7 @@ class RecordAttendanceUseCase:
     async def _open_new_session(
         self,
         cmd: RecordAttendanceCommand,
-        schedule_start,
+        schedule_start: time | None,
     ) -> AttendanceLog:
         """Создаёт и сохраняет новую открытую AttendanceLog."""
         status = compute_status_on_open(
@@ -189,7 +189,7 @@ class RecordAttendanceUseCase:
         session: AttendanceLog,
         *,
         ended_at: datetime,
-        schedule_end,
+        schedule_end: time | None,
     ) -> AttendanceLog:
         """Закрывает существующую сессию: ended_at + duration + final status."""
         # CHECK-constraint требует строго ended_at > started_at. В граничном

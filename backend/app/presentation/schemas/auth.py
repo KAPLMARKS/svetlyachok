@@ -56,6 +56,19 @@ class TokenResponse(BaseModel):
     expires_in: int = Field(..., description="Секунды до истечения access-токена.")
 
 
+class LogoutResponse(BaseModel):
+    """Ответ на /auth/logout — серверное подтверждение выхода.
+
+    Серверной blacklist-семантики у access-токена нет (отложено в
+    security hardening): сервер логирует факт выхода, клиент сам
+    стирает свои access + refresh токены.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    message: Literal["logged_out"] = "logged_out"
+
+
 class CurrentUserResponse(BaseModel):
     """Ответ на GET /api/v1/me — публичная информация о текущем пользователе.
 

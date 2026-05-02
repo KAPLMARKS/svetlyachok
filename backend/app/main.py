@@ -15,6 +15,7 @@
 
 from __future__ import annotations
 
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from importlib.metadata import PackageNotFoundError, version
 
@@ -86,9 +87,15 @@ def create_app() -> FastAPI:
     register_exception_handlers(app)
 
     # Rate limiter — slowapi требует app.state.limiter, отдельный handler
-    # на RateLimitExceeded.
+    # на RateLimitExceeded. Starlette типизирует handler как
+    # `Callable[[Request, Exception], ...]`, но slowapi предоставляет
+    # узкий handler по `RateLimitExceeded` — сужение по типу исключения
+    # делает Starlette сам, поэтому игнорируем variance-conflict.
     app.state.limiter = limiter
-    app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
+    app.add_exception_handler(
+        RateLimitExceeded,
+        rate_limit_exceeded_handler,  # type: ignore[arg-type]
+    )
 
     # Routers
     app.include_router(health_router, prefix="/api/v1")
@@ -126,7 +133,7 @@ def create_app() -> FastAPI:
 
 
 @asynccontextmanager
-async def _lifespan(_app: FastAPI):
+async def _lifespan(_app: FastAPI) -> AsyncIterator[None]:
     """Lifespan-хук FastAPI — startup и shutdown.
 
     На startup — инициализирует пул соединений к БД (engine создаётся

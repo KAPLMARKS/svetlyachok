@@ -25,10 +25,16 @@ from app.application.employees.refresh_tokens import (
 )
 from app.core.config import Settings, get_settings
 from app.core.logging import get_logger
-from app.presentation.dependencies import get_login_use_case, get_refresh_use_case
+from app.domain.employees.entities import Employee
+from app.presentation.dependencies import (
+    get_current_user,
+    get_login_use_case,
+    get_refresh_use_case,
+)
 from app.presentation.middleware.rate_limit import limiter
 from app.presentation.schemas.auth import (
     LoginRequest,
+    LogoutResponse,
     RefreshRequest,
     TokenResponse,
 )
@@ -102,3 +108,28 @@ async def refresh(
         refresh_token=pair.refresh_token,
         expires_in=pair.expires_in,
     )
+
+
+@router.post(
+    "/logout",
+    response_model=LogoutResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Выход (серверный аудит)",
+    description=(
+        "Принимает Bearer access-токен. Сервер не делает blacklist'а "
+        "(отложено в security hardening): достаточно стереть access + "
+        "refresh на клиенте. Endpoint фиксирует событие выхода в логах "
+        "для аудита."
+    ),
+)
+@limiter.limit(_settings.auth_logout_rate_limit)
+async def logout(
+    request: Request,  # обязателен для slowapi.key_func
+    current_user: Employee = Depends(get_current_user),
+) -> LogoutResponse:
+    log.info(
+        "[auth.endpoint.logout] success",
+        employee_id=current_user.id,
+        role=current_user.role.value,
+    )
+    return LogoutResponse(message="logged_out")

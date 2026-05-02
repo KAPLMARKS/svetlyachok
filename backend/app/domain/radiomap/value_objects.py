@@ -78,7 +78,7 @@ class RSSIVector:
 
     samples: Mapping[BSSID, int] = field(default_factory=dict)
 
-    def __init__(self, samples: Mapping[BSSID | str, int]) -> None:
+    def __init__(self, samples: Mapping[str, int] | Mapping[BSSID, int]) -> None:
         if not isinstance(samples, Mapping):
             raise ValidationError(
                 code="invalid_rssi_vector",

@@ -30,6 +30,7 @@ from app.presentation.dependencies import (
     get_current_user,
     get_delete_calibration_point_use_case,
     get_list_calibration_points_use_case,
+    invalidate_position_classifier_cache,
     require_role,
 )
 from app.presentation.schemas.radiomap import (
@@ -83,6 +84,10 @@ async def create_calibration_point(
         employee_id=current_user.id,
     )
     result = await use_case.execute(cmd)
+    # Калибровка изменилась — сбрасываем singleton-классификатор, чтобы
+    # следующий /classify обучился на актуальной выборке.
+    log.debug("[calibration.endpoint.create] invalidating classifier cache")
+    invalidate_position_classifier_cache()
     return _to_response(result)
 
 
@@ -135,4 +140,7 @@ async def delete_calibration_point(
     await use_case.execute(
         DeleteCalibrationPointCommand(fingerprint_id=fingerprint_id)
     )
+    # Калибровка изменилась — сбрасываем singleton-классификатор.
+    log.debug("[calibration.endpoint.delete] invalidating classifier cache")
+    invalidate_position_classifier_cache()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
