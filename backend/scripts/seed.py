@@ -106,7 +106,7 @@ def _build_employees_seed(hasher: BcryptPasswordHasher) -> list[dict]:
     """
     return [
         {
-            "email": "admin@svetlyachok.local",
+            "email": "admin@svetlyachok.dev",
             "full_name": "Админ Тестовый",
             "role": Role.ADMIN,
             "hashed_password": hasher.hash(_DEV_ADMIN_PASSWORD),
@@ -115,7 +115,7 @@ def _build_employees_seed(hasher: BcryptPasswordHasher) -> list[dict]:
             "schedule_end": None,
         },
         {
-            "email": "employee@svetlyachok.local",
+            "email": "employee@svetlyachok.dev",
             "full_name": "Иванов Иван Иванович",
             "role": Role.EMPLOYEE,
             "hashed_password": hasher.hash(_DEV_EMPLOYEE_PASSWORD),

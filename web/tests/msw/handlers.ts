@@ -24,7 +24,7 @@ const API = "/api/v1";
 
 const sampleAdmin: CurrentUserResponse = {
   id: 1,
-  email: "admin@svetlyachok.local",
+  email: "admin@svetlyachok.dev",
   full_name: "Иванов И.И.",
   role: "admin",
   is_active: true,
@@ -42,7 +42,7 @@ const sampleTokens: TokenPair = {
 const sampleEmployees: EmployeeResponse[] = [
   {
     id: 1,
-    email: "admin@svetlyachok.local",
+    email: "admin@svetlyachok.dev",
     full_name: "Иванов И.И.",
     role: "admin",
     is_active: true,
@@ -53,7 +53,7 @@ const sampleEmployees: EmployeeResponse[] = [
   },
   {
     id: 2,
-    email: "petrov@svetlyachok.local",
+    email: "petrov@svetlyachok.dev",
     full_name: "Петров П.П.",
     role: "employee",
     is_active: true,

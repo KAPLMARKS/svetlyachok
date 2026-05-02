@@ -23,7 +23,7 @@ class LoginRequest(BaseModel):
     email: EmailStr = Field(
         ...,
         description="Email сотрудника. Используется как login.",
-        examples=["admin@svetlyachok.local"],
+        examples=["admin@svetlyachok.dev"],
     )
     password: SecretStr = Field(
         ...,

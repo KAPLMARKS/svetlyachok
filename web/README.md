@@ -74,7 +74,7 @@ npm run dev
 ## Авторизация в dev-БД
 
 После `python scripts/seed.py` на backend:
-- email: `admin@svetlyachok.local`
+- email: `admin@svetlyachok.dev`
 - пароль: `admin12345`
 
 ## Структура папок
@@ -140,7 +140,7 @@ Backend и web запущены:
 
 Сценарий:
 1. Открыть http://localhost:5173 → должен редиректить на `/login`.
-2. Войти `admin@svetlyachok.local` / `admin12345` → попадаем на `/attendance`.
+2. Войти `admin@svetlyachok.dev` / `admin12345` → попадаем на `/attendance`.
 3. Сайдбар «Сотрудники» → создать нового, активировать/деактивировать.
 4. Сайдбар «Зоны» → создать зону, удалить (если нет attendance — успех; иначе
    увидим toast про 409 zone_in_use).
