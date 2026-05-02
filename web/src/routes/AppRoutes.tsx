@@ -1,6 +1,7 @@
 import { Route, Routes } from "react-router-dom";
 
 import { LoginPage } from "@/features/auth/LoginPage";
+import { EmployeesListPage } from "@/features/employees/EmployeesListPage";
 import { AppShell } from "@/layout/AppShell";
 
 import { AdminRoute } from "./AdminRoute";
@@ -35,7 +36,7 @@ export const AppRoutes = (): JSX.Element => {
               path={ROUTES.attendanceEmployee}
               element={<Placeholder title="Учёт сотрудника" />}
             />
-            <Route path={ROUTES.employees} element={<Placeholder title="Сотрудники" />} />
+            <Route path={ROUTES.employees} element={<EmployeesListPage />} />
             <Route path={ROUTES.zones} element={<Placeholder title="Зоны" />} />
             <Route path={ROUTES.radiomap} element={<Placeholder title="Радиокарта" />} />
           </Route>
