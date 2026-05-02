@@ -1,22 +1,21 @@
-import { env } from "./lib/env";
+import { useEffect } from "react";
+import { Toaster } from "react-hot-toast";
+import { BrowserRouter } from "react-router-dom";
+
+import { useAuthStore } from "./features/auth/authStore";
+import { AppRoutes } from "./routes/AppRoutes";
 
 export const App = (): JSX.Element => {
+  const bootstrap = useAuthStore((s) => s.bootstrapFromRefresh);
+
+  useEffect(() => {
+    void bootstrap();
+  }, [bootstrap]);
+
   return (
-    <main
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        height: "100vh",
-        gap: "var(--space-3)",
-      }}
-    >
-      <h1>Светлячок</h1>
-      <p>Админ-панель — scaffold готов.</p>
-      <code style={{ background: "var(--color-surface)", padding: "var(--space-2) var(--space-3)" }}>
-        API base URL: {env.apiBaseUrl}
-      </code>
-    </main>
+    <BrowserRouter>
+      <AppRoutes />
+      <Toaster position="top-right" />
+    </BrowserRouter>
   );
 };
