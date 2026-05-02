@@ -7,8 +7,12 @@ plugins {
 
 android {
     namespace = "com.svetlyachok.svetlyachok_mobile"
-    // Android 14 (API 34) — целевой и компилируемый SDK по плану.
-    compileSdk = 35
+    // compileSdk 36 — требование плагинов integration_test, shared_preferences_android,
+    // sqflite_android (они компилируются против API 36 и backward-совместимы).
+    // targetSdk оставлен на 35 (Android 15) — заявленная runtime-совместимость
+    // приложения. Поднимать targetSdk до 36 имеет смысл только при намеренной
+    // миграции под новые правила Android 16.
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
