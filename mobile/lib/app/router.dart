@@ -21,6 +21,8 @@ import '../domain/models/user.dart';
 import '../features/auth/providers.dart';
 import '../features/auth/views/login_screen.dart';
 import '../features/auth/views/splash_screen.dart';
+import '../features/scanning/views/scan_home_screen.dart';
+import '../features/settings/views/settings_screen.dart';
 
 class AppRoutes {
   const AppRoutes._();
@@ -110,7 +112,7 @@ GoRouter buildRouter(Ref ref) {
       GoRoute(
         path: AppRoutes.scan,
         builder: (BuildContext context, GoRouterState state) =>
-            const _ScanPlaceholder(),
+            const ScanHomeScreen(),
       ),
       GoRoute(
         path: AppRoutes.adminCalibration,
@@ -123,56 +125,10 @@ GoRouter buildRouter(Ref ref) {
       GoRoute(
         path: AppRoutes.settings,
         builder: (BuildContext context, GoRouterState state) =>
-            const _PlaceholderScreen(title: 'Настройки', subtitle: 'Phase 4'),
+            const SettingsScreen(),
       ),
     ],
   );
-}
-
-/// Временный «scan home» — реальный экран Phase 3.
-/// Уже умеет logout (проверка auth flow end-to-end).
-class _ScanPlaceholder extends ConsumerWidget {
-  const _ScanPlaceholder();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final AsyncValue<User?> async = ref.watch(currentUserProvider);
-    final User? user = async.value;
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Я на работе'),
-        actions: <Widget>[
-          IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Выйти',
-            onPressed: () =>
-                ref.read(currentUserProvider.notifier).logout(),
-          ),
-        ],
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Icon(Icons.location_on_outlined, size: 64),
-            const SizedBox(height: 16),
-            Text(
-              user == null
-                  ? 'Не залогинен'
-                  : 'Привет, ${user.fullName}\nРоль: ${user.role}',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Phase 3-4 — сканирование и синхронизация',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 class _PlaceholderScreen extends StatelessWidget {
