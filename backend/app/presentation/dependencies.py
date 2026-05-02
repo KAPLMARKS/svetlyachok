@@ -419,6 +419,23 @@ def get_position_classifier() -> PositionClassifier:
     return _position_classifier_singleton()
 
 
+def invalidate_position_classifier_cache() -> None:
+    """Сбрасывает singleton WKNN-классификатора.
+
+    Вызывается после CRUD на `/api/v1/calibration/points` (admin-only).
+    После сброса следующий `/classify` создаст новый `WknnClassifier`
+    instance через `_position_classifier_singleton()` и lazy-обучит его
+    на актуальной калибровочной выборке (см. `ClassifyLocationUseCase`).
+
+    Альтернатива — добавить `reset()` метод на `WknnClassifier` и
+    вызывать его, но переключение singleton'а гарантирует чистое
+    состояние без риска утечки старого `_clf`/`_bssid_index`.
+    Минимальное изменение — `cache_clear` на lru_cache-обёртке.
+    """
+    log.info("[dependencies.invalidate_position_classifier_cache] cleared")
+    _position_classifier_singleton.cache_clear()
+
+
 def get_classify_location_use_case(
     fingerprint_repo: FingerprintRepository = Depends(get_fingerprint_repository),
     zone_repo: ZoneRepository = Depends(get_zone_repository),
