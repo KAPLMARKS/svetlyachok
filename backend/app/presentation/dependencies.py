@@ -8,7 +8,7 @@ Composition root: связывает Protocol'ы из domain/application с
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from datetime import timedelta
 from functools import lru_cache
 
@@ -223,7 +223,7 @@ async def get_current_user(
     return employee
 
 
-def require_role(*allowed_roles: Role) -> Callable[..., Employee]:
+def require_role(*allowed_roles: Role) -> Callable[..., Awaitable[Employee]]:
     """Фабрика dependency для role-based авторизации.
 
     Использование:

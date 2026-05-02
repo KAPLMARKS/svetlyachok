@@ -91,7 +91,10 @@ def get_logger(name: str | None = None) -> structlog.stdlib.BoundLogger:
     Returns:
         Привязанный structlog logger.
     """
-    return structlog.get_logger(name) if name else structlog.get_logger()
+    logger: structlog.stdlib.BoundLogger = (
+        structlog.get_logger(name) if name else structlog.get_logger()
+    )
+    return logger
 
 
 def bind_correlation_id(correlation_id: str) -> None:

@@ -46,7 +46,9 @@ async def health_check(
         "database": await check_database(session_factory),
     }
 
-    overall = "ok" if all(v == "ok" for v in checks.values()) else "degraded"
+    overall: Literal["ok", "degraded"] = (
+        "ok" if all(v == "ok" for v in checks.values()) else "degraded"
+    )
     if overall == "degraded":
         failed = [k for k, v in checks.items() if v == "fail"]
         log.warning("[health.check] degraded", failed_checks=failed)
