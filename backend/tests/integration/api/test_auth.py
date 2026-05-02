@@ -222,3 +222,53 @@ async def test_refresh_with_access_token_returns_wrong_type(
 
     assert response.status_code == 401
     assert response.json()["code"] == "wrong_token_type"
+
+
+# ---------------------------------------------------------------------------
+# POST /api/v1/auth/logout
+# ---------------------------------------------------------------------------
+
+
+async def test_logout_without_token_returns_401(
+    client_with_db: AsyncClient,
+) -> None:
+    response = await client_with_db.post("/api/v1/auth/logout")
+    assert response.status_code == 401
+    assert response.json()["code"] == "missing_token"
+
+
+async def test_logout_with_valid_token_returns_200(
+    client_with_db: AsyncClient,
+    seeded_employee: dict[str, str],
+) -> None:
+    login = await client_with_db.post("/api/v1/auth/login", json=seeded_employee)
+    access_token = login.json()["access_token"]
+
+    response = await client_with_db.post(
+        "/api/v1/auth/logout",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+    assert response.status_code == 200, response.text
+    assert response.json() == {"message": "logged_out"}
+
+
+async def test_logout_with_same_token_twice_still_succeeds(
+    client_with_db: AsyncClient,
+    seeded_employee: dict[str, str],
+) -> None:
+    """Blacklist отложен — токен остаётся валидным до истечения.
+
+    Этот тест явно фиксирует контракт MVP: повторный logout с тем же
+    access-токеном проходит, потому что серверной таблицы revoked_tokens
+    нет. Когда добавим — этот тест надо будет поменять на assert 401.
+    """
+    login = await client_with_db.post("/api/v1/auth/login", json=seeded_employee)
+    access_token = login.json()["access_token"]
+    headers = {"Authorization": f"Bearer {access_token}"}
+
+    first = await client_with_db.post("/api/v1/auth/logout", headers=headers)
+    assert first.status_code == 200, first.text
+
+    second = await client_with_db.post("/api/v1/auth/logout", headers=headers)
+    assert second.status_code == 200, second.text
+    assert second.json() == {"message": "logged_out"}

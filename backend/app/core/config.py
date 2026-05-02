@@ -118,6 +118,15 @@ class Settings(BaseSettings):
         description="Лимит на /api/v1/auth/refresh. Формат slowapi.",
     )
 
+    auth_logout_rate_limit: str = Field(
+        default="10/minute",
+        description=(
+            "Лимит на /api/v1/auth/logout. Серверной blacklist'а нет — "
+            "endpoint нужен для аудита и для будущей расширенной "
+            "семантики; защищаемся от ddos через бесконечные logout'ы."
+        ),
+    )
+
     # --- Attendance ---
 
     attendance_inactivity_timeout_seconds: int = Field(
