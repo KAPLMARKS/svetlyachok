@@ -10,6 +10,7 @@ import '../../data/repositories/fingerprint_repository_impl.dart';
 import '../../data/wifi/wifi_scan_service.dart';
 import '../../domain/repositories/fingerprint_repository.dart';
 import '../auth/providers.dart';
+import 'background/scheduler.dart';
 
 final Provider<WifiScanService> wifiScanServiceProvider =
     Provider<WifiScanService>((Ref ref) => WifiScanServiceImpl());
@@ -40,6 +41,33 @@ final Provider<FingerprintRepository> fingerprintRepositoryProvider =
   );
   ref.onDispose(repo.dispose);
   return repo;
+});
+
+final Provider<BackgroundScheduler> backgroundSchedulerProvider =
+    Provider<BackgroundScheduler>((Ref ref) => WorkmanagerScheduler());
+
+/// Lifecycle-binding: слушает `currentUserProvider` и регистрирует/отменяет
+/// WorkManager-задачи на login/logout. Watch его из корневого виджета
+/// (`SvetlyachokApp.build`) — иначе провайдер не активируется и ничего
+/// не подпишется.
+final Provider<void> backgroundLifecycleBindingProvider =
+    Provider<void>((Ref ref) {
+  bool registered = false;
+  ref.listen<AsyncValue<dynamic>>(
+    currentUserProvider,
+    (AsyncValue<dynamic>? prev, AsyncValue<dynamic> next) async {
+      final user = next.value;
+      final scheduler = ref.read(backgroundSchedulerProvider);
+      if (user != null && !registered) {
+        await scheduler.registerPeriodicTasks();
+        registered = true;
+      } else if (user == null && registered) {
+        await scheduler.cancelAll();
+        registered = false;
+      }
+    },
+    fireImmediately: true,
+  );
 });
 
 /// Стрим количества pending-отпечатков.
